@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        BigInt   @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String
+  phone     String?
+  role      Role
+
+  salesAsCustomer   Sale[]         @relation("CustomerSales")
+  salesAsEmployee   Sale[]         @relation("EmployeeSales")
+  serviceAsCustomer ServiceRecord[] @relation("CustomerServices")
+  serviceAsEmployee ServiceRecord[] @relation("EmployeeServices")
+  serviceAsMechanic ServiceRecord[] @relation("MechanicServices")
+
+  bookings  Booking[]  // <--- dodaj ovo
+}
+
+model Car {
+  id       BigInt  @id @default(autoincrement())
+  make     String
+  model    String
+  category Int
+  year     Int
+  price    Decimal  @db.Decimal(10, 2)
+  imagePath  String?
+
+  sales        Sale[]
+  inventory    Inventory[]
+  services     ServiceRecord[]
+  bookings    Booking[]  // <--- dodaj ovo
+}
+
+model Part {
+  id         BigInt  @id @default(autoincrement())
+  name       String
+  group      Int     // Consider linking this to PartGroup in the future
+  price      Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
+  supplierId BigInt
+
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  inventory   Inventory[]
+  sales       Sale[]
+  serviceParts ServicePart[]
+}
+
+model Supplier {
+  id          BigInt  @id @default(autoincrement())
+  name        String
+  contactName String
+  email       String
+  phone       String    // Promijenjeno iz BigInt u String
+
+  parts       Part[]
+}
+
+model Sale {
+  id          BigInt   @id @default(autoincrement())
+  carId       BigInt?
+  partId      BigInt?
+  employeeId  BigInt?
+  customerId  BigInt
+  saleDate    DateTime
+  totalPrice  Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
+  wayOfPayment Int
+
+  car        Car?     @relation(fields: [carId], references: [id])
+  part       Part?    @relation(fields: [partId], references: [id])
+  customer   User     @relation("CustomerSales", fields: [customerId], references: [id])
+  employee   User?    @relation("EmployeeSales", fields: [employeeId], references: [id])
+}
+
+model ServiceRecord {
+  id          BigInt   @id @default(autoincrement())
+  carId       BigInt
+  employeeId  BigInt
+  mechanicId  BigInt
+  customerId  BigInt?
+  description String
+  price       Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
+  serviceDate DateTime
+
+  car         Car       @relation(fields: [carId], references: [id])
+  employee    User      @relation("EmployeeServices", fields: [employeeId], references: [id])
+  mechanic    User      @relation("MechanicServices", fields: [mechanicId], references: [id])
+  customer    User?     @relation("CustomerServices", fields: [customerId], references: [id])
+
+  partsUsed   ServicePart[]
+}
+
+model ServicePart {
+  id        BigInt  @id @default(autoincrement())
+  serviceId BigInt
+  partId    BigInt
+  quantity  Int
+
+  service   ServiceRecord @relation(fields: [serviceId], references: [id])
+  part      Part          @relation(fields: [partId], references: [id])
+}
+
+model Inventory {
+  id       BigInt  @id @default(autoincrement())
+  carId    BigInt?
+  partId   BigInt?
+  quantity BigInt
+
+  car      Car?  @relation(fields: [carId], references: [id])
+  part     Part? @relation(fields: [partId], references: [id])
+}
+
+model Booking {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt
+  type        BookingType
+  carId       BigInt?
+  date        DateTime
+  status      BookingStatus  @default(PENDING)
+  createdAt   DateTime @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+  car         Car?      @relation(fields: [carId], references: [id])
+}
+
+enum BookingType {
+  TEST_DRIVE
+  INSPECTION
+  SERVICE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum Role {
+  KLIJENT
+  ZAPOSLENIK
+  ADMIN
+}
