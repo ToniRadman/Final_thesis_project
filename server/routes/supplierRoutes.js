@@ -14,7 +14,7 @@ const { validate } = require('../middleware/validate');
 router.get('/', getAllSuppliers);
 router.get('/:id', getSupplierById);
 router.post('/', validate(createSupplierSchema), createSupplier);
-router.put('/:id', alidate(updateSupplierSchema), updateSupplier);
+router.put('/:id', validate(updateSupplierSchema), updateSupplier);
 router.delete('/:id', deleteSupplier);
 
 module.exports = router;

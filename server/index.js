@@ -10,7 +10,6 @@ const serviceRecordRoutes = require('./routes/serviceRecordRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const bookingsRoutes = require('./routes/bookingRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-const reservationRoutes = require('./routes/reservationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,8 +38,6 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/bookings', bookingsRoutes);
 
 app.use('/api/analytics', analyticsRoutes);
-
-app.use('/api/reservations', reservationRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server je pokrenut na portu ${PORT}`);
