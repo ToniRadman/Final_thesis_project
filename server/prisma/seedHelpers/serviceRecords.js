@@ -1,6 +1,7 @@
 const { faker } = require('@faker-js/faker');
 
 module.exports = async function seedServiceRecords(prisma) {
+  await prisma.serviceRecord.deleteMany();
   const cars = await prisma.car.findMany();
   const users = await prisma.user.findMany();
 

@@ -1,9 +1,50 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// 🔧 Helper za status boje
+function getStatusColor(status) {
+  switch (status) {
+    case 'Dostupno':
+      return 'green';
+    case 'Rezervirano':
+      return 'yellow';
+    case 'Prodano':
+      return 'red';
+    default:
+      return 'gray';
+  }
+}
+
+// 🔧 Helper za konverziju BigInt vrijednosti
+function convertBigInts(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigInts);
+  } else if (obj !== null && typeof obj === 'object') {
+    const newObj = {};
+    for (const key in obj) {
+      newObj[key] = convertBigInts(obj[key]);
+    }
+    return newObj;
+  } else if (typeof obj === 'bigint') {
+    return obj.toString();
+  } else {
+    return obj;
+  }
+}
+
 async function getAllCars(req, res) {
   try {
-    const { page = 1, pageSize = 10, make, model, category, yearFrom, yearTo, priceMin, priceMax } = req.query;
+    const {
+      page = 1,
+      pageSize = 10,
+      make,
+      model,
+      category,
+      yearFrom,
+      yearTo,
+      priceMin,
+      priceMax
+    } = req.query;
 
     const filters = {};
 
@@ -30,15 +71,20 @@ async function getAllCars(req, res) {
 
     const total = await prisma.car.count({ where: filters });
 
-    res.json({
-      data: cars,
+    const data = cars.map(car => ({
+      ...car,
+      statusColor: getStatusColor(car.status),
+    }));
+
+    res.json(convertBigInts({
+      data,
       pagination: {
         total,
         page: Number(page),
         pageSize: Number(pageSize),
         totalPages: Math.ceil(total / pageSize),
       },
-    });
+    }));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru prilikom dohvaćanja vozila.' });
@@ -48,9 +94,24 @@ async function getAllCars(req, res) {
 async function getCarById(req, res) {
   const { id } = req.params;
   try {
-    const car = await prisma.car.findUnique({ where: { id: Number(id) } });
+    const car = await prisma.car.findUnique({
+      where: { id: BigInt(id) },
+      include: {
+        sales: true,
+        inventory: true,
+        services: true,
+        bookings: true, // ✅ ispravno
+      },
+    });
+
     if (!car) return res.status(404).json({ message: 'Vozilo nije pronađeno' });
-    res.json(car);
+
+    const carWithColor = {
+      ...car,
+      statusColor: getStatusColor(car.status),
+    };
+
+    res.json(convertBigInts(carWithColor));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
@@ -58,12 +119,41 @@ async function getCarById(req, res) {
 }
 
 async function createCar(req, res) {
-  const { make, model, category, year, price } = req.body;
+  const {
+    make,
+    model,
+    category,
+    year,
+    price,
+    status,
+    fuel,
+    km,
+    image,
+    isNew
+  } = req.body;
+
   try {
     const newCar = await prisma.car.create({
-      data: { make, model, category, year, price },
+      data: {
+        make,
+        model,
+        category,
+        year,
+        price,
+        status,
+        fuel,
+        km,
+        image,
+        isNew,
+      },
     });
-    res.status(201).json(newCar);
+
+    const carWithColor = {
+      ...newCar,
+      statusColor: getStatusColor(newCar.status),
+    };
+
+    res.status(201).json(convertBigInts(carWithColor));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
@@ -78,7 +168,13 @@ async function updateCar(req, res) {
       where: { id: Number(id) },
       data: { make, model, category, year, price },
     });
-    res.json(updatedCar);
+
+    const carWithColor = {
+      ...updatedCar,
+      statusColor: getStatusColor(updatedCar.status),
+    };
+
+    res.json(convertBigInts(carWithColor));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });

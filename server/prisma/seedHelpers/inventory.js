@@ -1,4 +1,5 @@
 module.exports = async function seedInventory(prisma) {
+  await prisma.inventory.deleteMany();
   // Pretpostavimo da vec postoji 5 auta (id 1-5) i 5 dijelova (id 1-5)
   const inventoryItems = [
     { carId: 1, quantity: 3 },

@@ -1,4 +1,5 @@
 module.exports = async function seedSuppliers(prisma) {
+  await prisma.supplier.deleteMany();
   const suppliers = [
     {
       name: 'Auto Dijelovi d.o.o.',

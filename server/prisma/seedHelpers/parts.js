@@ -1,4 +1,5 @@
 module.exports = async function seedParts(prisma) {
+  await prisma.part.deleteMany();
   const parts = [
     {
       name: 'Zračni filter',

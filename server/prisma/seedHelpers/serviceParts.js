@@ -1,4 +1,5 @@
 module.exports = async function seedServiceParts(prisma) {
+  await prisma.servicePart.deleteMany();
   const serviceRecords = await prisma.serviceRecord.findMany({ take: 5 });
   const parts = await prisma.part.findMany({ take: 5 });
 

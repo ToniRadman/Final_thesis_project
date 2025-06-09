@@ -33,6 +33,9 @@ model Car {
   year     Int
   price    Decimal  @db.Decimal(10, 2)
   imagePath  String?
+  fuel       String?     // NOVO
+  km         Int?        // NOVO
+  status     String?     // NOVO: "Dostupno", "Rezervirano", itd.
 
   sales        Sale[]
   inventory    Inventory[]

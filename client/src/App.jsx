@@ -7,6 +7,7 @@ import VehicleDetails from './pages/Vehicles/VehicleDetails';
 import Parts from './pages/Parts/Parts';
 import Reservations from './pages/Reservations/Reservations';
 import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import Cart from './pages/Cart/Cart';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <Route path="/parts" element={<Parts />} />
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/cart" element={<Cart />} />
           </Routes>
         </main>

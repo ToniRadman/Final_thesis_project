@@ -1,236 +1,111 @@
 import { useState } from 'react';
-import { FaCalendarAlt, FaClock, FaUser, FaPhone, FaEnvelope, FaUtensils, FaUsers } from 'react-icons/fa';
 
-const ReservationForm = () => {
+const BookingForm = ({ carId }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    bookingType: '',
     date: '',
-    time: '',
-    guests: '2',
-    specialRequests: ''
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log('Reservation submitted:', formData);
-    setSubmitted(true);
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        date: '',
-        time: '',
-        guests: '2',
-        specialRequests: ''
+    setError('');
+
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // prilagodi po potrebi
+        },
+        body: JSON.stringify({
+          carId: Number(carId),
+          bookingType: formData.bookingType,
+          date: new Date(formData.date),
+        }),
       });
-      setSubmitted(false);
-    }, 3000);
-  };
 
-  // Generate time options from 11:00 to 22:00 in 30-minute intervals
-  const generateTimeOptions = () => {
-    const times = [];
-    for (let hour = 11; hour <= 22; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        times.push(
-          <option key={timeString} value={timeString}>
-            {timeString}
-          </option>
-        );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Greška pri slanju rezervacije');
       }
-    }
-    return times;
-  };
 
-  // Generate guest options from 1 to 12
-  const generateGuestOptions = () => {
-    const options = [];
-    for (let i = 1; i <= 12; i++) {
-      options.push(
-        <option key={i} value={i}>
-          {i} {i === 1 ? 'osoba' : 'osobe'}
-        </option>
-      );
+      setSubmitted(true);
+      setTimeout(() => {
+        setFormData({ bookingType: '', date: '' });
+        setSubmitted(false);
+      }, 3000);
+    } catch (err) {
+      setError(err.message);
     }
-    // Add option for larger parties
-    options.push(
-      <option key="13" value="13+">
-        13+ osoba (grupe)
-      </option>
-    );
-    return options;
   };
-
-  // Get today's date in YYYY-MM-DD format for the date input min attribute
-  const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden p-6">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Rezervacija stola</h2>
-      
+    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Rezervacija vozila</h2>
+
       {submitted ? (
-        <div className="text-center py-8">
-          <div className="text-green-500 text-5xl mb-4">✓</div>
-          <h3 className="text-xl font-semibold mb-2">Hvala na rezervaciji!</h3>
-          <p className="text-gray-600">Potvrda rezervacije poslana je na vašu email adresu.</p>
-          <p className="text-gray-600 mt-2">U slučaju promjena, kontaktirajte nas na 01/2345-678.</p>
+        <div className="text-green-600 text-center">
+          <p className="text-4xl mb-2">✓</p>
+          <p>Rezervacija uspješno poslana.</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div className="relative">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Ime i prezime</label>
-              <div className="relative">
-                <FaUser className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <p className="text-red-600">{error}</p>}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <div className="relative">
-                  <FaEnvelope className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="relative">
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-                <div className="relative">
-                  <FaPhone className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-                <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    min={today}
-                    className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="relative">
-                <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">Vrijeme</label>
-                <div className="relative">
-                  <FaClock className="absolute left-3 top-3 text-gray-400" />
-                  <select
-                    id="time"
-                    name="time"
-                    value={formData.time}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                    required
-                  >
-                    <option value="">Odaberite vrijeme</option>
-                    {generateTimeOptions()}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <label htmlFor="guests" className="block text-sm font-medium text-gray-700 mb-1">Broj gostiju</label>
-              <div className="relative">
-                <FaUsers className="absolute left-3 top-3 text-gray-400" />
-                <select
-                  id="guests"
-                  name="guests"
-                  value={formData.guests}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                  required
-                >
-                  {generateGuestOptions()}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-1">Posebni zahtjevi (opcionalno)</label>
-              <div className="relative">
-                <FaUtensils className="absolute left-3 top-3 text-gray-400" />
-                <textarea
-                  id="specialRequests"
-                  name="specialRequests"
-                  value={formData.specialRequests}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className="w-full pl-10 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Na primjer: alergije, prazna stolica za bebu, proslava rođendana..."
-                ></textarea>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md font-medium transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Potvrdi rezervaciju
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-500 text-center">
-              Vaši podaci bit će korišteni isključivo za ovu rezervaciju. Klikom na "Potvrdi rezervaciju" slažete se s našim uvjetima.
-            </p>
+          <div>
+            <label className="block text-sm font-medium mb-1" htmlFor="bookingType">
+              Vrsta rezervacije
+            </label>
+            <select
+              id="bookingType"
+              name="bookingType"
+              value={formData.bookingType}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-md p-2"
+            >
+              <option value="">Odaberi vrstu</option>
+              <option value="TEST_DRIVE">Testna vožnja</option>
+              <option value="INSPECTION">Pregled vozila</option>
+              <option value="SERVICE">Servis</option>
+            </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1" htmlFor="date">
+              Datum rezervacije
+            </label>
+            <input
+              type="datetime-local"
+              id="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              min={new Date().toISOString().slice(0, 16)}
+              className="w-full border border-gray-300 rounded-md p-2"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
+          >
+            Pošalji rezervaciju
+          </button>
         </form>
       )}
     </div>
   );
 };
 
-export default ReservationForm;
+export default BookingForm;

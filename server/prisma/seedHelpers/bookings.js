@@ -1,6 +1,7 @@
 const { BookingStatus, BookingType } = require('@prisma/client');
 
 module.exports = async function seedBookings(prisma) {
+  await prisma.booking.deleteMany();
   const users = await prisma.user.findMany({ where: { role: 'KLIJENT' } });
   const cars = await prisma.car.findMany();
 

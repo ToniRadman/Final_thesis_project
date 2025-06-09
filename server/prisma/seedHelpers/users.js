@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 
 module.exports = async function seedUsers(prisma) {
+  await prisma.user.deleteMany();
+
   const users = [
     {
       firstName: 'Ana',
@@ -8,6 +10,7 @@ module.exports = async function seedUsers(prisma) {
       email: 'ana@example.com',
       password: await bcrypt.hash('password123', 10),
       role: 'KLIJENT',
+      phone: '+385912345678',
     },
     {
       firstName: 'Marko',
@@ -15,6 +18,7 @@ module.exports = async function seedUsers(prisma) {
       email: 'marko@example.com',
       password: await bcrypt.hash('password123', 10),
       role: 'ZAPOSLENIK',
+      phone: '+385912345679',
     },
     {
       firstName: 'Ivana',
@@ -22,6 +26,7 @@ module.exports = async function seedUsers(prisma) {
       email: 'ivana@example.com',
       password: await bcrypt.hash('password123', 10),
       role: 'KLIJENT',
+      phone: '+385912345680',
     },
     {
       firstName: 'Ivan',
@@ -29,6 +34,39 @@ module.exports = async function seedUsers(prisma) {
       email: 'ivan@example.com',
       password: await bcrypt.hash('password123', 10),
       role: 'ZAPOSLENIK',
+      phone: '+385912345681',
+    },
+    {
+      firstName: 'Luka',
+      lastName: 'Lukić',
+      email: 'luka@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'KLIJENT',
+      phone: '+385912345682',
+    },
+    {
+      firstName: 'Marija',
+      lastName: 'Marić',
+      email: 'marija@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'ZAPOSLENIK',
+      phone: '+385912345683',
+    },
+    {
+      firstName: 'Petar',
+      lastName: 'Perić',
+      email: 'petar@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'KLIJENT',
+      phone: '+385912345684',
+    },
+    {
+      firstName: 'Katarina',
+      lastName: 'Katić',
+      email: 'katarina@example.com',
+      password: await bcrypt.hash('password123', 10),
+      role: 'ZAPOSLENIK',
+      phone: '+385912345685',
     },
     {
       firstName: 'Admin',
@@ -36,6 +74,7 @@ module.exports = async function seedUsers(prisma) {
       email: 'admin@example.com',
       password: await bcrypt.hash('adminpass', 10),
       role: 'ADMIN',
+      phone: '+385912345686',
     },
   ];
 

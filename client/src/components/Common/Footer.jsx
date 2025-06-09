@@ -14,9 +14,9 @@ const Footer = () => {
           <div>
             <h4 className="font-bold mb-4">Brzi linkovi</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Vozila</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Dijelovi</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Servis</a></li>
+              <li><a href="/vehicles" className="text-gray-400 hover:text-white">Vozila</a></li>
+              <li><a href="/parts" className="text-gray-400 hover:text-white">Dijelovi</a></li>
+              <li><a href="/reservations" className="text-gray-400 hover:text-white">Servis</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white">O nama</a></li>
             </ul>
           </div>
