@@ -1,3 +1,6 @@
+const { VehicleCategory } = require('@prisma/client');
+
+/** @param {import('@prisma/client').PrismaClient} prisma */
 module.exports = async function seedCars(prisma) {
   await prisma.car.deleteMany();
 
@@ -5,7 +8,7 @@ module.exports = async function seedCars(prisma) {
     {
       make: 'Toyota',
       model: 'Corolla',
-      category: 1,
+      category: VehicleCategory.HATCHBACK,
       year: 2020,
       price: 15000.00,
       fuel: 'Benzin',
@@ -16,7 +19,7 @@ module.exports = async function seedCars(prisma) {
     {
       make: 'Volkswagen',
       model: 'Golf',
-      category: 1,
+      category: VehicleCategory.HATCHBACK,
       year: 2019,
       price: 13500.00,
       fuel: 'Dizel',
@@ -27,7 +30,7 @@ module.exports = async function seedCars(prisma) {
     {
       make: 'BMW',
       model: '320d',
-      category: 2,
+      category: VehicleCategory.LIMUZINA,
       year: 2021,
       price: 28000.00,
       fuel: 'Dizel',
@@ -38,7 +41,7 @@ module.exports = async function seedCars(prisma) {
     {
       make: 'Mercedes',
       model: 'C200',
-      category: 2,
+      category: VehicleCategory.LIMUZINA,
       year: 2022,
       price: 32000.00,
       fuel: 'Dizel',
@@ -49,7 +52,7 @@ module.exports = async function seedCars(prisma) {
     {
       make: 'Renault',
       model: 'Clio',
-      category: 1,
+      category: VehicleCategory.HATCHBACK,
       year: 2018,
       price: 9500.00,
       fuel: 'Benzin',

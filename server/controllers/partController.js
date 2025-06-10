@@ -1,111 +1,176 @@
 // controllers/partController.js
 const { PrismaClient } = require('@prisma/client');
+const { convertBigInts } = require('../utils/convertBigInts'); 
 const prisma = new PrismaClient();
 
-async function getAllParts(req, res) {
+// Konverzija Decimal polja (jer Prisma koristi Decimal.js objekt)
+function serializePart(part) {
+  return {
+    ...part,
+    price: part.price.toString(),
+  };
+}
+
+const getAllParts = async (req, res) => {
   try {
-    const { page = 1, pageSize = 10, group, priceMin, priceMax, name, supplierId } = req.query;
+    const {
+      name,
+      category,
+      supplierId,
+      priceMin,
+      priceMax,
+      page = 1,
+      pageSize = 10,
+    } = req.query;
 
     const filters = {};
 
-    if (group) filters.group = Number(group);
-    if (name) filters.name = { contains: name, mode: 'insensitive' };
-    if (supplierId) filters.supplierId = Number(supplierId);
+    if (name) {
+      filters.name = {
+        contains: name,
+        mode: 'insensitive',
+      };
+    }
+
+    if (category) {
+      filters.category = category;
+    }
+
+    if (supplierId) {
+      filters.supplierId = BigInt(supplierId);
+    }
+
     if (priceMin || priceMax) {
       filters.price = {};
-      if (priceMin) filters.price.gte = Number(priceMin);
-      if (priceMax) filters.price.lte = Number(priceMax);
+      if (priceMin) filters.price.gte = new Prisma.Decimal(priceMin);
+      if (priceMax) filters.price.lte = new Prisma.Decimal(priceMax);
     }
+
+    const skip = (Number(page) - 1) * Number(pageSize);
+    const take = Number(pageSize);
 
     const parts = await prisma.part.findMany({
       where: filters,
-      skip: (page - 1) * pageSize,
-      take: Number(pageSize),
-      orderBy: { id: 'asc' },
-    });
-
-    const total = await prisma.part.count({ where: filters });
-
-    res.json({
-      data: parts,
-      pagination: {
-        total,
-        page: Number(page),
-        pageSize: Number(pageSize),
-        totalPages: Math.ceil(total / pageSize),
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru prilikom dohvaćanja dijelova.' });
-  }
-}
-
-async function getPartById(req, res) {
-  const { id } = req.params;
-  try {
-    const part = await prisma.part.findUnique({
-      where: { id: Number(id) },
+      skip,
+      take,
       include: {
         supplier: true,
       },
     });
-    if (!part) return res.status(404).json({ message: 'Dio nije pronađen' });
-    res.json(part);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
-  }
-}
 
-async function createPart(req, res) {
-  const { name, group, price, supplierId } = req.body;
+    const total = await prisma.part.count({ where: filters });
+
+    res.json(convertBigInts({
+      data: parts.map(serializePart),
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+    }));
+  } catch (error) {
+    console.error('Greška kod dohvaćanja dijelova:', error);
+    res.status(500).json({ message: 'Greška kod dohvaćanja dijelova' });
+  }
+};
+
+const getPartById = async (req, res) => {
   try {
+    const { id } = req.params;
+    const part = await prisma.part.findUnique({
+      where: { id: BigInt(id) },
+      include: { supplier: true },
+    });
+
+    if (!part) {
+      return res.status(404).json({ message: 'Dio nije pronađen' });
+    }
+
+    res.json(serializePart(part));
+  } catch (error) {
+    console.error('Greška kod dohvaćanja dijela:', error);
+    res.status(500).json({ message: 'Greška kod dohvaćanja dijela' });
+  }
+};
+
+const createPart = async (req, res) => {
+  try {
+    const { name, category, price, supplierId } = req.body;
+
     const newPart = await prisma.part.create({
       data: {
         name,
-        group,
-        price,
-        supplierId,
+        category,
+        price: new Prisma.Decimal(price),
+        supplierId: BigInt(supplierId),
       },
     });
-    res.status(201).json(newPart);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
-  }
-}
 
-async function updatePart(req, res) {
-  const { id } = req.params;
-  const { name, group, price, supplierId } = req.body;
+    res.status(201).json(serializePart(newPart));
+  } catch (error) {
+    console.error('Greška kod kreiranja dijela:', error);
+    res.status(500).json({ message: 'Greška kod kreiranja dijela' });
+  }
+};
+
+const updatePart = async (req, res) => {
   try {
+    const { id } = req.params;
+    const { name, category, price, supplierId } = req.body;
+
     const updatedPart = await prisma.part.update({
-      where: { id: Number(id) },
+      where: { id: BigInt(id) },
       data: {
         name,
-        group,
-        price,
-        supplierId,
+        category,
+        price: new Prisma.Decimal(price),
+        supplierId: BigInt(supplierId),
       },
     });
-    res.json(updatedPart);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
-  }
-}
 
-async function deletePart(req, res) {
-  const { id } = req.params;
-  try {
-    await prisma.part.delete({ where: { id: Number(id) } });
-    res.json({ message: 'Dio obrisan' });
+    res.json(serializePart(updatedPart));
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
+    console.error('Greška kod ažuriranja dijela:', error);
+    res.status(500).json({ message: 'Greška kod ažuriranja dijela' });
   }
-}
+};
+
+const deletePart = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.part.delete({
+      where: { id: BigInt(id) },
+    });
+
+    res.json({ message: 'Dio je uspješno obrisan' });
+  } catch (error) {
+    console.error('Greška kod brisanja dijela:', error);
+    res.status(500).json({ message: 'Greška kod brisanja dijela' });
+  }
+};
+
+const getPartFilters = async (req, res) => {
+  try {
+    const categories = Object.values(Prisma.VehicleCategory); // Enum
+    const suppliers = await prisma.supplier.findMany({
+      select: { id: true, name: true },
+    });
+
+    const names = await prisma.part.findMany({
+      distinct: ['name'],
+      select: { name: true },
+      orderBy: { name: 'asc' },
+    });
+
+    res.json({
+      categories,
+      suppliers,
+      names: names.map((n) => n.name),
+    });
+  } catch (error) {
+    console.error('Greška kod dohvaćanja filtera za dijelove:', error);
+    res.status(500).json({ message: 'Greška kod dohvaćanja filtera za dijelove' });
+  }
+};
 
 module.exports = {
   getAllParts,
@@ -113,4 +178,5 @@ module.exports = {
   createPart,
   updatePart,
   deletePart,
+  getPartFilters,
 };

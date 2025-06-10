@@ -16,10 +16,34 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login submitted:', formData);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || 'Neuspješna prijava');
+        return;
+      }
+
+      // Spremljeni token u localStorage
+      localStorage.setItem('token', data.token);
+
+      alert('Uspješna prijava!');
+      window.location.href = '/'; // ili npr. /dashboard
+    } catch (err) {
+      console.error(err);
+      alert('Greška prilikom slanja zahtjeva');
+    }
   };
 
   return (

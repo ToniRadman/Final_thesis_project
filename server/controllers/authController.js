@@ -47,11 +47,7 @@ async function loginUser(req, res) {
     if (!isMatch) return res.status(400).json({ message: 'Neispravan email ili lozinka' });
 
     // Generiraj JWT token
-    const token = jwt.sign(
-      { userId: user.id, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    );
+    const token = jwt.sign({ id: user.id.toString() }, JWT_SECRET, { expiresIn: '1d' });
 
     res.json({ token });
   } catch (error) {

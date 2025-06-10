@@ -1,8 +1,23 @@
-// src/components/Common/Navbar.jsx
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaShoppingCart, FaUser, FaBars } from 'react-icons/fa';
 
 const Navbar = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleScrollToContact = (e) => {
+    e.preventDefault();
+    const footer = document.getElementById('footer-contact');
+    if (footer) {
+      footer.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
   return (
     <nav className="bg-blue-900 text-white shadow-lg">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -12,10 +27,11 @@ const Navbar = () => {
         
         <div className="hidden md:flex space-x-6">
           <Link to="/vehicles" className="hover:text-blue-200">Vozila</Link>
-          <Link to="/parts" className="hover:text-blue-200">Dijelovi</Link>
-          <Link to="/reservations" className="hover:text-blue-200">Servis</Link>
-          <Link to="#" className="hover:text-blue-200">O nama</Link>
-          <Link to="#" className="hover:text-blue-200">Kontakt</Link>
+          {isLoggedIn && <Link to="/parts" className="hover:text-blue-200">Dijelovi</Link>}
+          {isLoggedIn && <Link to="/reservations" className="hover:text-blue-200">Servis</Link>}
+          <a href="#footer-contact" onClick={handleScrollToContact} className="hover:text-blue-200">
+            Kontakt
+          </a>
         </div>
         
         <div className="flex items-center space-x-4">

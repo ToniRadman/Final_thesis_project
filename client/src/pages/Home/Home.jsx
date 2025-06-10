@@ -1,10 +1,19 @@
 // src/pages/Home/Home.jsx
-import VehicleFilter from '../../components/Vehicles/VehicleFilter';
+import { useEffect, useState } from 'react';
 import VehicleList from '../../components/Vehicles/VehicleList';
-import PartsSection from '../../components/Parts/PartsList';
+import PartsList from '../../components/Parts/PartsList';
 import ReservationSection from '../../components/Reservations/ReservationCalendar';
+import { Link } from 'react-router-dom';
+import { FaArrowRight } from 'react-icons/fa';
 
 const Home = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
   return (
     <>
       {/* Hero Section */}
@@ -19,20 +28,38 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Vehicle Filter */}
-      <VehicleFilter />
-
       {/* Vehicle List */}
       <div className="container mx-auto px-4 py-12">
         <h2 className="text-3xl font-bold mb-8 text-gray-800">Naša ponuda vozila</h2>
         <VehicleList />
+        <div className="mt-10 text-center">
+          <Link to="/vehicles" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300">
+            Prikaži sva vozila <FaArrowRight className="ml-2 inline" />
+          </Link>
+        </div>
       </div>
 
-      {/* Parts Section */}
-      <PartsSection />
+      {/* Prikaži dijelove i rezervacije samo ako je korisnik prijavljen */}
+      {isLoggedIn && (
+        <>
+          {/* Parts Section */}
+          <div className="container mx-auto px-4 py-12">
+            <h2 className="text-3xl font-bold mb-8 text-gray-800">Dijelovi</h2>
+            <PartsList />
+            <div className="mt-10 text-center">
+              <Link to="/parts" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300">
+                Prikaži sve dijelove <FaArrowRight className="ml-2 inline" />
+              </Link>
+            </div>
+          </div>
 
-      {/* Reservation Section */}
-      <ReservationSection />
+          {/* Reservation Section */}
+          <div className="container mx-auto px-4 py-12">
+            <h2 className="text-3xl font-bold mb-8 text-gray-800">Rezervacije</h2>
+            <ReservationSection />
+          </div>
+        </>
+      )}
     </>
   );
 };

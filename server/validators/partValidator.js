@@ -1,15 +1,27 @@
 const Joi = require('joi');
 
+// Enum vrijednosti iz VehicleCategory
+const allowedCategories = [
+  'SUV',
+  'LIMUZINA',
+  'KOMBI',
+  'HATCHBACK',
+  'KARAVAN',
+  'PICKUP',
+  'COUPE',
+  'KABRIOLET',
+];
+
 const createPartSchema = Joi.object({
   name: Joi.string().required(),
-  group: Joi.number().integer().required(),
+  category: Joi.string().valid(...allowedCategories).required(),
   price: Joi.number().precision(2).required(),
   supplierId: Joi.number().integer().required(),
 });
 
 const updatePartSchema = Joi.object({
   name: Joi.string().optional(),
-  group: Joi.number().integer().optional(),
+  category: Joi.string().valid(...allowedCategories).optional(),
   price: Joi.number().precision(2).optional(),
   supplierId: Joi.number().integer().optional(),
 });

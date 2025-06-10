@@ -20,10 +20,43 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log('Registration submitted:', formData);
+
+    if (formData.password !== formData.confirmPassword) {
+      alert("Lozinke se ne podudaraju");
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          role: 'CUSTOMER' // ili 'USER' – ovisno što očekuješ u backendu
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || 'Nešto je pošlo po zlu');
+        return;
+      }
+
+      alert('Registracija uspješna! Možete se prijaviti.');
+      window.location.href = '/login';
+    } catch (err) {
+      console.error(err);
+      alert('Greška prilikom slanja zahtjeva');
+    }
   };
 
   return (

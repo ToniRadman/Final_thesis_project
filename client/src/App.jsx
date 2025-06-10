@@ -4,6 +4,7 @@ import Navbar from './components/Common/Navbar';
 import Footer from './components/Common/Footer';
 import Home from './pages/Home/Home';
 import VehicleDetails from './pages/Vehicles/VehicleDetails';
+import Vehicles from './pages/Vehicles/Vehicles'; // <--- dodaj ovo
 import Parts from './pages/Parts/Parts';
 import Reservations from './pages/Reservations/Reservations';
 import Login from './pages/Auth/Login';
@@ -18,7 +19,7 @@ function App() {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/vehicles" element={<VehicleDetails />} />
+            <Route path="/vehicles" element={<Vehicles />} />
             <Route path="/vehicles/:id" element={<VehicleDetails />} />
             <Route path="/parts" element={<Parts />} />
             <Route path="/reservations" element={<Reservations />} />

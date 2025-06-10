@@ -1,11 +1,18 @@
-// src/components/Common/Footer.jsx
+import { useEffect, useState } from 'react';
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
 const Footer = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
   return (
-    <footer className="bg-gray-900 text-white pt-12 pb-6">
+    <footer id="footer-contact" className="bg-gray-900 text-white pt-12 pb-6">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
             <h3 className="text-xl font-bold mb-4">AutoPremium</h3>
             <p className="text-gray-400">Vodeći distributer novih i rabljenih vozila u regiji sa više od 15 godina iskustva.</p>
@@ -15,19 +22,8 @@ const Footer = () => {
             <h4 className="font-bold mb-4">Brzi linkovi</h4>
             <ul className="space-y-2">
               <li><a href="/vehicles" className="text-gray-400 hover:text-white">Vozila</a></li>
-              <li><a href="/parts" className="text-gray-400 hover:text-white">Dijelovi</a></li>
-              <li><a href="/reservations" className="text-gray-400 hover:text-white">Servis</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">O nama</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-bold mb-4">Korisnički servis</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Pomoć i podrška</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Česta pitanja</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Uvjeti korištenja</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Pravila privatnosti</a></li>
+              {isLoggedIn && <li><a href="/parts" className="text-gray-400 hover:text-white">Dijelovi</a></li>}
+              {isLoggedIn && <li><a href="/reservations" className="text-gray-400 hover:text-white">Servis</a></li>}
             </ul>
           </div>
           

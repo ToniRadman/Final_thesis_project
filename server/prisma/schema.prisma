@@ -26,27 +26,27 @@ model User {
 }
 
 model Car {
-  id       BigInt  @id @default(autoincrement())
-  make     String
-  model    String
-  category Int
-  year     Int
-  price    Decimal  @db.Decimal(10, 2)
+  id         BigInt           @id @default(autoincrement())
+  make       String
+  model      String
+  category   VehicleCategory  // PRETHODNO: Int
+  year       Int
+  price      Decimal          @db.Decimal(10, 2)
   imagePath  String?
-  fuel       String?     // NOVO
-  km         Int?        // NOVO
-  status     String?     // NOVO: "Dostupno", "Rezervirano", itd.
+  fuel       String?
+  km         Int?
+  status     String?
 
   sales        Sale[]
   inventory    Inventory[]
   services     ServiceRecord[]
-  bookings    Booking[]  // <--- dodaj ovo
+  bookings     Booking[]
 }
 
 model Part {
   id         BigInt  @id @default(autoincrement())
   name       String
-  group      Int     // Consider linking this to PartGroup in the future
+  category   VehicleCategory
   price      Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
   supplierId BigInt
 
@@ -137,6 +137,17 @@ enum BookingType {
   TEST_DRIVE
   INSPECTION
   SERVICE
+}
+
+enum VehicleCategory {
+  SUV
+  LIMUZINA
+  KOMBI
+  HATCHBACK
+  KARAVAN
+  PICKUP
+  COUPE
+  KABRIOLET
 }
 
 enum BookingStatus {

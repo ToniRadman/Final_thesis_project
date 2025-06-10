@@ -10,10 +10,12 @@ const {
   updateCar,
   deleteCar,
   uploadCarImage,
+  getCarFilters,
 } = require('../controllers/carController');
 const upload = require('../middleware/upload');
 
 router.get('/', getAllCars);
+router.get('/filters', getCarFilters);
 router.get('/:id', getCarById);
 
 router.use(authenticateToken);

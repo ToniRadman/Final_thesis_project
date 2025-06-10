@@ -8,6 +8,7 @@ const {
   createPart,
   updatePart,
   deletePart,
+  getPartFilters
 } = require('../controllers/partController');
 const { createPartSchema, updatePartSchema } = require('../validators/partValidator');
 const { validate } = require('../middleware/validate');
@@ -15,6 +16,7 @@ const { validate } = require('../middleware/validate');
 router.use(authenticateToken);
 
 router.get('/', getAllParts);
+router.get('/filters', getPartFilters);
 router.get('/:id', getPartById);
 
 router.post('/', authorizeRoles('ZAPOSLENIK', 'ADMIN'), validate(createPartSchema), createPart);
