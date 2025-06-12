@@ -112,9 +112,10 @@ CREATE TABLE "Inventory" (
 -- CreateTable
 CREATE TABLE "Booking" (
     "id" BIGSERIAL NOT NULL,
-    "userId" BIGINT NOT NULL,
+    "customerId" BIGINT NOT NULL,
+    "staffId" BIGINT,
     "bookingType" "BookingType" NOT NULL,
-    "carId" BIGINT,
+    "carId" BIGINT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -165,7 +166,10 @@ ALTER TABLE "Inventory" ADD CONSTRAINT "Inventory_carId_fkey" FOREIGN KEY ("carI
 ALTER TABLE "Inventory" ADD CONSTRAINT "Inventory_partId_fkey" FOREIGN KEY ("partId") REFERENCES "Part"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Booking" ADD CONSTRAINT "Booking_carId_fkey" FOREIGN KEY ("carId") REFERENCES "Car"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_carId_fkey" FOREIGN KEY ("carId") REFERENCES "Car"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

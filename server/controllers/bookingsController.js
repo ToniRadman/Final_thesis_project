@@ -11,7 +11,6 @@ async function createBooking(req, res) {
     const { carId, bookingType, date } = req.body;
     const userId = req.user.userId;
 
-    // Možeš dodati dodatne provjere, npr. da li je auto dostupan na dan itd.
     const bookingTypeMap = {
       'probna vožnja': 'TEST_DRIVE',
       'pregled vozila': 'INSPECTION',
@@ -20,7 +19,7 @@ async function createBooking(req, res) {
 
     const booking = await prisma.booking.create({
       data: {
-        userId,
+        customerId: userId, // Prilagodba shemi
         carId: Number(carId),
         bookingType: bookingTypeMap[bookingType.toLowerCase()],
         date: new Date(date),
@@ -45,14 +44,15 @@ async function getBookings(req, res) {
 
     let where = {};
     if (role === 'KLIJENT') {
-      where.userId = userId; // klijent vidi samo svoje rezervacije
+      where.customerId = userId; // Prilagodba shemi
     }
 
     const bookings = await prisma.booking.findMany({
       where,
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        customer: { select: { id: true, firstName: true, lastName: true, email: true } }, // Prilagodba shemi
         car: true,
+        staff: { select: { id: true, firstName: true, lastName: true, email: true } } // dodatno ako želiš prikazati tko je obradio
       },
       orderBy: { date: 'desc' },
     });
@@ -75,7 +75,10 @@ async function updateBookingStatus(req, res) {
 
     const booking = await prisma.booking.update({
       where: { id: bookingId },
-      data: { status },
+      data: {
+        status,
+        staffId: req.user.userId, // Sprema tko je promijenio status
+      },
     });
 
     res.json({ message: 'Status rezervacije ažuriran', booking });

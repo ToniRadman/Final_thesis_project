@@ -22,7 +22,8 @@ model User {
   serviceAsEmployee ServiceRecord[] @relation("EmployeeServices")
   serviceAsMechanic ServiceRecord[] @relation("MechanicServices")
 
-  bookings  Booking[]  // <--- dodaj ovo
+  bookingsAsCustomer Booking[] @relation("CustomerBookings")
+  bookingsAsStaff    Booking[] @relation("StaffBookings")
 }
 
 model Car {
@@ -121,16 +122,18 @@ model Inventory {
 }
 
 model Booking {
-  id          BigInt    @id @default(autoincrement())
-  userId      BigInt
-  bookingType   BookingType
+  id          BigInt        @id @default(autoincrement())
+  customerId  BigInt
+  staffId     BigInt?       // zaposlenik koji je mijenjao status
+  bookingType BookingType
   carId       BigInt
   date        DateTime
-  status      BookingStatus  @default(PENDING)
-  createdAt   DateTime @default(now())
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
 
-  user        User      @relation(fields: [userId], references: [id])
-  car         Car      @relation(fields: [carId], references: [id])
+  customer    User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  staff       User?         @relation("StaffBookings", fields: [staffId], references: [id])
+  car         Car           @relation(fields: [carId], references: [id])
 }
 
 enum BookingType {

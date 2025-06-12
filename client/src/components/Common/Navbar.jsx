@@ -31,11 +31,19 @@ const Navbar = () => {
           <Link to="/vehicles" className="hover:text-blue-200">Vozila</Link>
           {user && <Link to="/parts" className="hover:text-blue-200">Dijelovi</Link>}
           {user && <Link to="/reservations" className="hover:text-blue-200">Rezervacije</Link>}
+          {(user?.role === 'ZAPOSLENIK' || user?.role === 'ADMIN') && (
+            <Link to="/inventory" className="hover:text-blue-200">Inventar</Link>
+          )}
           {user?.role === 'ADMIN' && (
-            <Link to="/user-management" className="hover:text-blue-200 flex items-center space-x-1">
-              <FaUsersCog />
-              <span>Korisnici</span>
-            </Link>
+            <>
+              <Link to="/user-management" className="hover:text-blue-200 flex items-center space-x-1">
+                <FaUsersCog />
+                <span>Korisnici</span>
+              </Link>
+              <Link to="/analytics" className="hover:text-blue-200 flex items-center space-x-1">
+                📊 <span>Analitika</span>
+              </Link>
+            </>
           )}
           <a href="#footer-contact" onClick={handleScrollToContact} className="hover:text-blue-200">Kontakt</a>
         </div>

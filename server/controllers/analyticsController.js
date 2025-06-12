@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { convertBigInts } = require('../utils/convertBigInts');
 const prisma = new PrismaClient();
 
 // Helper za parsiranje perioda (day, week, month, year)
@@ -89,7 +90,7 @@ async function getPopularCars(req, res) {
       salesCount: pc._count.carId
     }));
 
-    res.json(result);
+    res.json(convertBigInts(result));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška u dohvaćanju popularnih vozila' });
@@ -125,7 +126,7 @@ async function getPopularParts(req, res) {
       salesCount: pp._count.partId
     }));
 
-    res.json(result);
+    res.json(convertBigInts(result));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška u dohvaćanju popularnih dijelova' });
@@ -204,7 +205,7 @@ async function getActiveEmployees(req, res) {
       activityCount: count
     }));
 
-    res.json(result);
+    res.json(convertBigInts(result));
 
   } catch (error) {
     console.error(error);

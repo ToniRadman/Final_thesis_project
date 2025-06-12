@@ -1,5 +1,8 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Navbar from './components/Common/Navbar';
 import Footer from './components/Common/Footer';
 import Home from './pages/Home/Home';
@@ -16,14 +19,18 @@ import Profile from './pages/Profile/Profile';
 import EditProfile from './pages/Profile/EditProfile';
 import Checkout from './pages/Cart/Checkout';
 import UserManagement from './pages/Admin/UserManagement';
+import Inventory from './pages/Admin/Inventory';
+import Analytics from './pages/Admin/Analytics';
 import PrivateRoute from './components/Auth/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
+
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
+          <ToastContainer position="top-right" autoClose={3000} />
           <Navbar />
           <main className="flex-grow">
             <Routes>
@@ -49,11 +56,13 @@ function App() {
                 <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
                 <Route path="/parts/new" element={<PartForm />} />
                 <Route path="/parts/:id/edit" element={<PartForm />} />
+                <Route path="/inventory" element={<Inventory />} />
               </Route>
 
               {/* Samo admin */}
               <Route element={<PrivateRoute allowedRoles={['ADMIN']} />}>
                 <Route path="/user-management" element={<UserManagement />} />
+                <Route path="/analytics" element={<Analytics />} />
               </Route>
             </Routes>
           </main>

@@ -1,5 +1,6 @@
 // controllers/inventoryController.js
 const { PrismaClient } = require('@prisma/client');
+const { convertBigInts } = require('../utils/convertBigInts');
 const prisma = new PrismaClient();
 
 async function getAllInventory(req, res) {
@@ -10,7 +11,7 @@ async function getAllInventory(req, res) {
         part: true,
       },
     });
-    res.json(inventory);
+    res.json(convertBigInts(inventory));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
@@ -21,17 +22,18 @@ async function getInventoryById(req, res) {
   const { id } = req.params;
   try {
     const item = await prisma.inventory.findUnique({
-      where: { id: Number(id) },
+      where: {
+        id: BigInt(id)
+      },
       include: {
         car: true,
-        part: true,
-      },
+        part: true
+      }
     });
-    if (!item) return res.status(404).json({ message: 'Inventar nije pronađen' });
     res.json(item);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Greška kod dohvaćanja inventara." });
   }
 }
 

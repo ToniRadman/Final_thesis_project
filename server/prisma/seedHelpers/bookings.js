@@ -2,45 +2,52 @@ const { BookingStatus, BookingType } = require('@prisma/client');
 
 module.exports = async function seedBookings(prisma) {
   await prisma.booking.deleteMany();
-  const users = await prisma.user.findMany({ where: { role: 'KLIJENT' } });
+
+  const customers = await prisma.user.findMany({ where: { role: 'KLIJENT' } });
+  const staffMembers = await prisma.user.findMany({ where: { role: 'ZAPOSLENIK' } });
   const cars = await prisma.car.findMany();
 
-  if (users.length === 0 || cars.length === 0) {
-    console.warn('⚠️ No users or cars found. Skipping bookings seed.');
+  if (customers.length === 0 || staffMembers.length === 0 || cars.length === 0) {
+    console.warn('⚠️ No customers, staff, or cars found. Skipping bookings seed.');
     return;
   }
 
   const bookings = [
     {
-      userId: users[0].id,
+      customerId: customers[0].id,
+      staffId: staffMembers[0 % staffMembers.length].id,
       carId: cars[0]?.id,
       bookingType: BookingType.TEST_DRIVE,
       date: new Date('2025-07-01T10:00:00'),
       status: BookingStatus.CONFIRMED,
     },
     {
-      userId: users[1 % users.length].id,
+      customerId: customers[1 % customers.length].id,
+      staffId: staffMembers[1 % staffMembers.length].id,
       carId: cars[1 % cars.length]?.id,
       bookingType: BookingType.INSPECTION,
       date: new Date('2025-07-03T13:00:00'),
       status: BookingStatus.PENDING,
     },
     {
-      userId: users[2 % users.length].id,
+      customerId: customers[2 % customers.length].id,
+      staffId: staffMembers[2 % staffMembers.length].id,
       carId: cars[2 % cars.length]?.id,
       bookingType: BookingType.SERVICE,
       date: new Date('2025-07-05T15:30:00'),
       status: BookingStatus.COMPLETED,
     },
     {
-      userId: users[3 % users.length].id,
+      customerId: customers[3 % customers.length].id,
+      staffId: staffMembers[3 % staffMembers.length].id,
       carId: cars[3 % cars.length]?.id,
       bookingType: BookingType.SERVICE,
       date: new Date('2025-07-07T11:00:00'),
       status: BookingStatus.CANCELLED,
     },
     {
-      userId: users[4 % users.length].id,
+      customerId: customers[4 % customers.length].id,
+      staffId: staffMembers[4 % staffMembers.length].id,
       carId: cars[0]?.id,
       bookingType: BookingType.TEST_DRIVE,
       date: new Date('2025-07-09T09:30:00'),

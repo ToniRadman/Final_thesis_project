@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
-const { convertBigInts } = require('../utils/ConvertBigInts');
+const { convertBigInts } = require('../utils/convertBigInts');
 
 // Dohvati sve korisnike - samo ADMIN može
 async function getAllUsers(req, res) {

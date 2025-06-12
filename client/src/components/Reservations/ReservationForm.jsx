@@ -67,6 +67,7 @@ const ReservationForm = ({ carId }) => {
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
+    const today = new Date();
     const rows = [];
     let days = [];
     let day = startDate;
@@ -78,17 +79,28 @@ const ReservationForm = ({ carId }) => {
         const isCurrentMonth = isSameMonth(day, currentMonth);
         const isSelected = selectedDate && isSameDay(day, selectedDate);
 
+        const isPastOrToday = day <= today;
+        const isSunday = day.getDay() === 0;
+        const isDisabled = isPastOrToday || isSunday;
+
         days.push(
           <div
             key={day.toISOString()}
-            className={`h-12 flex items-center justify-center rounded-md cursor-pointer ${
-              !isCurrentMonth
+            className={`h-12 flex items-center justify-center rounded-md cursor-pointer transition text-sm
+            ${!isCurrentMonth
                 ? 'text-gray-400'
-                : isSelected
-                ? 'bg-blue-100 border border-blue-300 text-blue-800'
-                : 'border border-gray-200 hover:bg-blue-50'
-            }`}
-            onClick={() => isCurrentMonth && setSelectedDate(cloneDay)}
+                : isDisabled
+                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                  : isSelected
+                    ? 'bg-blue-100 border border-blue-300 text-blue-800'
+                    : 'border border-gray-200 hover:bg-blue-50'
+              }`}
+            onClick={() => {
+              if (!isDisabled && isCurrentMonth) {
+                setSelectedDate(cloneDay);
+                setSelectedTime('');
+              }
+            }}
           >
             {formattedDate}
           </div>
@@ -177,11 +189,10 @@ const ReservationForm = ({ carId }) => {
               <button
                 key={time}
                 onClick={() => setSelectedTime(time)}
-                className={`py-2 px-3 rounded-md transition ${
-                  selectedTime === time
+                className={`py-2 px-3 rounded-md transition ${selectedTime === time
                     ? 'bg-blue-200 text-blue-900'
                     : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                }`}
+                  }`}
                 type="button"
               >
                 {time}
@@ -217,9 +228,8 @@ const ReservationForm = ({ carId }) => {
 
       {message && (
         <p
-          className={`mt-4 text-center ${
-            message.type === 'success' ? 'text-green-600' : 'text-red-600'
-          }`}
+          className={`mt-4 text-center ${message.type === 'success' ? 'text-green-600' : 'text-red-600'
+            }`}
         >
           {message.text}
         </p>
