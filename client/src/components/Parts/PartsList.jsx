@@ -3,12 +3,18 @@ import { FaCartPlus, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 import Pagination from './PartsPagination';
 import { useCart } from '../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const PartList = ({ filters = {}, limit }) => {
   const [parts, setParts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const { user } = useAuth();
+  const canAdd = user?.role === 'ZAPOSLENIK' || user?.role === 'ADMIN';
+  const canEdit = user?.role === 'ZAPOSLENIK' || user?.role === 'ADMIN';
+  const canDelete = user?.role === 'ADMIN';
 
   const navigate = useNavigate();
   const isPaginated = !limit;
@@ -88,14 +94,14 @@ const PartList = ({ filters = {}, limit }) => {
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      { canAdd && (<div className="flex justify-end mb-4">
         <button
           onClick={() => navigate('/parts/new')}
           className="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
         >
           <FaPlus className="mr-2" /> Dodaj novi dio
         </button>
-      </div>
+      </div>)}
 
       {loading ? (
         <p>Učitavanje...</p>
@@ -115,20 +121,20 @@ const PartList = ({ filters = {}, limit }) => {
 
               {/* Ikonice za edit i delete u novom retku sa margin-top */}
               <div className="flex space-x-3 mb-3">
-                <button
+                {canEdit && (<button
                   onClick={() => navigate(`/parts/${part.id}/edit`)}
                   title="Uredi dio"
                   className="text-blue-600 hover:text-blue-800 text-lg"
                 >
                   <FaEdit />
-                </button>
-                <button
+                </button>)}
+                {canDelete && (<button
                   onClick={() => handleDelete(part.id)}
                   title="Obriši dio"
                   className="text-red-600 hover:text-red-800 text-lg"
                 >
                   <FaTrash />
-                </button>
+                </button>)}
               </div>
 
               <p className="text-gray-600 mb-1">Dobavljač: {part.supplier?.name || '-'}</p>

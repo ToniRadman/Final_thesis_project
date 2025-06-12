@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import VehicleCard from './VehicleCard';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const VehicleList = ({ filters }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const { user } = useAuth();
+  const canAdd = user?.role === 'ZAPOSLENIK' || user?.role === 'ADMIN';
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -71,14 +75,16 @@ const VehicleList = ({ filters }) => {
   return (
     <div>
       {/* Gumb za dodavanje vozila */}
-      <div className="flex justify-end mb-6">
-        <Link
-          to="/vehicles/new"
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md transition"
-        >
-          Dodaj vozilo
-        </Link>
-      </div>
+      {canAdd && (
+        <div className="flex justify-end mb-6">
+          <Link
+            to="/vehicles/new"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md transition"
+          >
+            Dodaj vozilo
+          </Link>
+        </div>
+      )}
 
       {vehicles.length === 0 ? (
         <div className="flex justify-center items-center py-12">

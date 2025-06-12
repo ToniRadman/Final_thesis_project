@@ -117,8 +117,9 @@ const ReservationSection = () => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 }); // zamjena za addDays(monthEnd, 7)
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
+    const today = new Date();
     const rows = [];
     let days = [];
     let day = startDate;
@@ -130,17 +131,28 @@ const ReservationSection = () => {
         const isCurrentMonth = isSameMonth(day, currentMonth);
         const isSelected = selectedDate && isSameDay(day, selectedDate);
 
+        const isPastOrToday = day <= today; // uključuje i danas
+        const isSunday = day.getDay() === 0;
+        const isDisabled = isPastOrToday || isSunday;
+
         days.push(
           <div
             key={day.toISOString()}
-            className={`h-12 flex items-center justify-center rounded-md cursor-pointer ${
-              !isCurrentMonth
-                ? 'text-gray-400'
-                : isSelected
-                ? 'bg-blue-100 border border-blue-300 text-blue-800'
-                : 'border border-gray-200 hover:bg-blue-50'
-            }`}
-            onClick={() => isCurrentMonth && setSelectedDate(cloneDay)}
+            className={`h-12 flex items-center justify-center rounded-md cursor-pointer transition text-sm
+              ${
+                !isCurrentMonth
+                  ? 'text-gray-400'
+                  : isDisabled
+                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                  : isSelected
+                  ? 'bg-blue-100 border border-blue-300 text-blue-800'
+                  : 'border border-gray-200 hover:bg-blue-50'
+              }`}
+            onClick={() => {
+              if (!isDisabled && isCurrentMonth) {
+                setSelectedDate(cloneDay);
+              }
+            }}
           >
             {formattedDate}
           </div>

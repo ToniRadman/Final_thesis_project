@@ -16,35 +16,51 @@ import Profile from './pages/Profile/Profile';
 import EditProfile from './pages/Profile/EditProfile';
 import Checkout from './pages/Cart/Checkout';
 import UserManagement from './pages/Admin/UserManagement';
+import PrivateRoute from './components/Auth/PrivateRoute';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/vehicles" element={<Vehicles />} />
-            <Route path="/vehicles/new" element={<VehicleForm />} />
-            <Route path="/vehicles/:id" element={<VehicleDetails />} />
-            <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
-            <Route path="/parts" element={<Parts />} />
-            <Route path="/parts/new" element={<PartForm />} />
-            <Route path="/parts/:id/edit" element={<PartForm />} />
-            <Route path="/reservations" element={<Reservations />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/edit" element={<EditProfile />} />
-            <Route path="/user-management" element={<UserManagement />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/vehicles" element={<Vehicles />} />
+              <Route path="/vehicles/:id" element={<VehicleDetails />} />
+
+              {/* Autentificirani korisnici */}
+              <Route element={<PrivateRoute allowedRoles={['KLIJENT', 'ZAPOSLENIK', 'ADMIN']} />}>
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/edit" element={<EditProfile />} />
+                <Route path="/reservations" element={<Reservations />} />
+                <Route path="/parts" element={<Parts />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+              </Route>
+
+              {/* Zaposlenici i admini */}
+              <Route element={<PrivateRoute allowedRoles={['ZAPOSLENIK', 'ADMIN']} />}>
+                <Route path="/vehicles/new" element={<VehicleForm />} />
+                <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
+                <Route path="/parts/new" element={<PartForm />} />
+                <Route path="/parts/:id/edit" element={<PartForm />} />
+              </Route>
+
+              {/* Samo admin */}
+              <Route element={<PrivateRoute allowedRoles={['ADMIN']} />}>
+                <Route path="/user-management" element={<UserManagement />} />
+              </Route>
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

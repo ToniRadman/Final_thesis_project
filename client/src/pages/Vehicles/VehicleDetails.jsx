@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaGasPump, FaTachometerAlt, FaArrowLeft } from 'react-icons/fa';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import ReservationForm from '../../components/Reservations/ReservationForm';
+import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 
 const VehicleDetails = () => {
@@ -12,6 +13,11 @@ const VehicleDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const { user } = useAuth();
+  const canEdit = user?.role === 'ZAPOSLENIK' || user?.role === 'ADMIN';
+  const canDelete = user?.role === 'ADMIN';
+
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -92,18 +98,22 @@ const VehicleDetails = () => {
               </h1>
 
               <div className="space-x-2">
-                <button
-                  onClick={() => navigate(`/vehicles/${id}/edit`)}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-md"
-                >
-                  Uredi
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-                >
-                  Obriši
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={() => navigate(`/vehicles/${id}/edit`)}
+                    className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-md"
+                  >
+                    Uredi
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                  >
+                    Obriši
+                  </button>
+                )}
               </div>
             </div>
 

@@ -1,11 +1,35 @@
-import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
-import { useAuth } from '../../context/AuthContext'; // Dodano za pristup korisniku
+import {
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaArrowUp,
+} from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import { useEffect, useState } from 'react';
 
 const Footer = () => {
-  const { user } = useAuth(); // Dohvati korisnika iz konteksta
+  const { user } = useAuth();
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  // Prati scroll i pokaži gumb kad je skrolano više od 100px
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollButton(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <footer id="footer-contact" className="bg-gray-900 text-white pt-12 pb-6">
+    <footer id="footer-contact" className="relative bg-gray-900 text-white pt-12 pb-6">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Opis tvrtke */}
@@ -51,11 +75,22 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Donji copyright */}
+        {/* Copyright */}
         <div className="border-t border-gray-800 pt-6 text-center text-gray-400 text-sm">
           <p>© 2025 Toni Radman. Sva prava pridržana.</p>
         </div>
       </div>
+
+      {/* Gumb za povratak na vrh - prikazuje se samo nakon skrola */}
+      {showScrollButton && (
+        <button
+          onClick={handleScrollToTop}
+          className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
+          aria-label="Povratak na vrh"
+        >
+          <FaArrowUp />
+        </button>
+      )}
     </footer>
   );
 };
