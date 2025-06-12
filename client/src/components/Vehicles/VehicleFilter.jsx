@@ -13,7 +13,7 @@ const VehicleFilter = ({ onFilter }) => {
 
   const [filterOptions, setFilterOptions] = useState({
     brands: [],
-    models: [],
+    models: {}, // objekt s modelima po marki
     categories: [],
     years: []
   });
@@ -27,34 +27,32 @@ const VehicleFilter = ({ onFilter }) => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch('/api/cars/filters');
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
-        // Provjeri da li podaci imaju očekivanu strukturu
+
         setFilterOptions({
           brands: Array.isArray(data.brands) ? data.brands : [],
-          models: Array.isArray(data.models) ? data.models : [],
+          models: typeof data.models === 'object' && data.models !== null ? data.models : {},
           categories: Array.isArray(data.categories) ? data.categories : [],
           years: Array.isArray(data.years) ? data.years : []
         });
-        
+
         if (data.error) {
           console.warn('Warning from server:', data.error);
         }
       } catch (err) {
         console.error('Greška pri učitavanju filter opcija:', err);
         setError(err.message);
-        
-        // Postavi osnovne opcije ako se ne mogu učitati iz baze
+
         setFilterOptions({
           brands: [],
-          models: [],
+          models: {},
           categories: ['SUV', 'LIMUZINA', 'KOMBI', 'HATCHBACK', 'KARAVAN', 'PICKUP', 'COUPE', 'KABRIOLET'],
           years: []
         });
@@ -66,20 +64,31 @@ const VehicleFilter = ({ onFilter }) => {
     fetchFilterOptions();
   }, []);
 
+  // Kad se promijeni marka, resetiraj model (jer modeli ovise o marki)
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+    setFilters(prev => {
+      if (name === 'make') {
+        // Promjena marke = resetiraj model
+        return {
+          ...prev,
+          make: value,
+          model: ''
+        };
+      }
+      return {
+        ...prev,
+        [name]: value
+      };
+    });
   };
 
-  const handleSubmit = (e) => {
-    // Ukloni prazne vrijednosti prije slanja
+  const handleSubmit = () => {
     const cleanFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) => value !== '')
     );
-    
+
     onFilter(cleanFilters);
   };
 
@@ -107,10 +116,15 @@ const VehicleFilter = ({ onFilter }) => {
     );
   }
 
+  // Dohvati modele za odabranu marku ili prazan niz ako nije odabrana marka
+  const availableModels = filters.make && filterOptions.models[filters.make]
+    ? filterOptions.models[filters.make]
+    : [];
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold mb-6">Filtriraj vozila</h2>
-      
+
       {error && (
         <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
           <p className="text-yellow-800">
@@ -118,7 +132,7 @@ const VehicleFilter = ({ onFilter }) => {
           </p>
         </div>
       )}
-      
+
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Marka */}
@@ -150,10 +164,11 @@ const VehicleFilter = ({ onFilter }) => {
               name="model"
               value={filters.model}
               onChange={handleInputChange}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={!filters.make}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
             >
               <option value="">Svi modeli</option>
-              {filterOptions.models.map((model, index) => (
+              {availableModels.map((model, index) => (
                 <option key={`model-${index}`} value={model}>
                   {model}
                 </option>

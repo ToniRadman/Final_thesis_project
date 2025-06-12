@@ -22,7 +22,14 @@ const PartFilter = ({ onFilter }) => {
     const fetchFilterOptions = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/parts/filters');
+
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/parts/filters', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+
         if (!response.ok) throw new Error('Greška pri učitavanju opcija za filtere.');
 
         const data = await response.json();

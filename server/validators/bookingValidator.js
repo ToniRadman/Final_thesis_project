@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const createBookingSchema = Joi.object({
   carId: Joi.number().integer().optional(),
-  type: Joi.string().valid('probna vožnja', 'pregled vozila', 'servis').required(),
+  bookingType: Joi.string().valid('probna vožnja', 'pregled vozila', 'servis').lowercase().required(),
   date: Joi.date().iso().required()
 });
 

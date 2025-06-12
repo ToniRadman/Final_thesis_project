@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import VehicleCard from './VehicleCard';
+import { Link } from 'react-router-dom';
 
 const VehicleList = ({ filters }) => {
   const [vehicles, setVehicles] = useState([]);
@@ -33,7 +34,6 @@ const VehicleList = ({ filters }) => {
         
         const data = await response.json();
         
-        // Provjeri da li data ima očekivanu strukturu
         if (data && Array.isArray(data.data)) {
           setVehicles(data.data);
         } else {
@@ -68,33 +68,43 @@ const VehicleList = ({ filters }) => {
     );
   }
 
-  if (vehicles.length === 0) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="text-gray-600">Nema vozila koja odgovaraju filtrima.</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {vehicles.map(vehicle => (
-        <VehicleCard
-          key={vehicle.id}
-          vehicle={{
-            id: vehicle.id,
-            title: `${vehicle.make} ${vehicle.model}`,
-            status: vehicle.status,
-            statusColor: vehicle.statusColor,
-            year: vehicle.year,
-            km: `${vehicle.km?.toLocaleString() || 0} km`,
-            fuel: vehicle.fuel,
-            price: `${vehicle.price?.toLocaleString() || 0} €`,
-            image: vehicle.image,
-            isNew: vehicle.isNew
-          }}
-        />
-      ))}
+    <div>
+      {/* Gumb za dodavanje vozila */}
+      <div className="flex justify-end mb-6">
+        <Link
+          to="/vehicles/new"
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md transition"
+        >
+          Dodaj vozilo
+        </Link>
+      </div>
+
+      {vehicles.length === 0 ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="text-gray-600">Nema vozila koja odgovaraju filtrima.</div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {vehicles.map(vehicle => (
+            <VehicleCard
+              key={vehicle.id}
+              vehicle={{
+                id: vehicle.id,
+                title: `${vehicle.make} ${vehicle.model}`,
+                status: vehicle.status,
+                statusColor: vehicle.statusColor,
+                year: vehicle.year,
+                km: `${vehicle.km?.toLocaleString() || 0} km`,
+                fuel: vehicle.fuel,
+                price: `${vehicle.price?.toLocaleString() || 0} €`,
+                image: vehicle.image,
+                isNew: vehicle.isNew
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

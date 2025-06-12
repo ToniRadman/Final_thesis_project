@@ -5,6 +5,7 @@ const {
   getAllUsers,
   getUserById,
   updateUser,
+  updateOwnProfile,
   deleteUser,
 } = require('../controllers/userController');
 const { updateUserSchema } = require('../validators/userValidator');
@@ -21,6 +22,9 @@ router.get('/:id', getUserById);
 
 // Update korisnika - ADMIN ili sam korisnik
 router.put('/:id', validate(updateUserSchema), updateUser);
+
+// Update vlastitog profila - samo korisnik
+router.patch('/me', validate(updateUserSchema), updateOwnProfile);
 
 // Delete korisnika - samo ADMIN
 router.delete('/:id', authorizeRoles('ADMIN'), deleteUser);

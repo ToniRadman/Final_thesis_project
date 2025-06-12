@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
+const { convertBigInts } = require('../utils/ConvertBigInts');
 
 // Dohvati sve korisnike - samo ADMIN može
 async function getAllUsers(req, res) {
@@ -8,7 +9,7 @@ async function getAllUsers(req, res) {
     const users = await prisma.user.findMany({
       select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true },
     });
-    res.json(users);
+    res.json(convertBigInts(users));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
@@ -76,6 +77,31 @@ async function updateUser(req, res) {
   }
 }
 
+async function updateOwnProfile(req, res) {
+  const userId = req.user.userId;
+  const { firstName, lastName, phone } = req.body;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(userId) },
+      data: { firstName, lastName, phone },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+      },
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Greška pri ažuriranju profila:', error);
+    res.status(500).json({ message: 'Greška na serveru' });
+  }
+}
+
 // Delete korisnika - samo ADMIN
 async function deleteUser(req, res) {
   const { id } = req.params;
@@ -98,5 +124,6 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
+  updateOwnProfile,
   deleteUser,
 };

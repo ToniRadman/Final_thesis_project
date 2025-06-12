@@ -1,24 +1,38 @@
 const { PrismaClient } = require('@prisma/client');
+const { convertBigInts } = require('../utils/convertBigInts');
 const prisma = new PrismaClient();
 
 async function createBooking(req, res) {
   try {
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: 'Neautoriziran pristup: korisnik nije pronađen.' });
+    }
+
     const { carId, bookingType, date } = req.body;
     const userId = req.user.userId;
 
     // Možeš dodati dodatne provjere, npr. da li je auto dostupan na dan itd.
+    const bookingTypeMap = {
+      'probna vožnja': 'TEST_DRIVE',
+      'pregled vozila': 'INSPECTION',
+      'servis': 'SERVICE',
+    };
 
     const booking = await prisma.booking.create({
       data: {
         userId,
         carId: Number(carId),
-        bookingType,
+        bookingType: bookingTypeMap[bookingType.toLowerCase()],
         date: new Date(date),
         status: 'PENDING',
       },
     });
 
-    res.status(201).json({ message: 'Rezervacija uspješno kreirana', booking });
+    res.status(201).json(convertBigInts({ 
+      message: 'Rezervacija uspješno kreirana', 
+      booking 
+    }));
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška pri kreiranju rezervacije' });
@@ -43,7 +57,7 @@ async function getBookings(req, res) {
       orderBy: { date: 'desc' },
     });
 
-    res.json(bookings);
+    res.json(convertBigInts(bookings));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška pri dohvaćanju rezervacija' });

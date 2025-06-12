@@ -1,8 +1,11 @@
-import { FaCreditCard, FaMoneyBillWave, FaLock } from 'react-icons/fa';
+import { FaCreditCard, FaMoneyBillWave, FaLock, FaTrash } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { useCart } from '../../context/CartContext'; // Pretpostavka: koristimo custom hook za košaricu
 
 const Checkout = () => {
+  const { cartItems, cartTotal, clearCart } = useCart();
+
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -17,6 +20,16 @@ const Checkout = () => {
     cardCvc: ''
   });
 
+  const deliveryFee = 5.00; // Primjer dostave u eurima
+  const cashOnDeliveryFee = 2.00; // Naknada za pouzeće u eurima
+
+  const totalItemsPrice = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const total = cartTotal + deliveryFee + (paymentMethod === 'cash' ? cashOnDeliveryFee : 0);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -27,19 +40,21 @@ const Checkout = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle checkout logic
-    console.log('Checkout submitted:', formData);
+    // Ovdje implementiraj logiku slanja podataka za narudžbu
+    console.log('Checkout submitted:', { formData, paymentMethod, cartItems, total });
+    clearCart(); // Pošalji narudžbu pa isprazni košaricu
+    alert('Hvala na kupnji! Narudžba je zaprimljena.');
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Način plaćanja</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold mb-4">Podaci za dostavu</h2>
-            
+
             <form>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -65,7 +80,7 @@ const Checkout = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
@@ -77,7 +92,7 @@ const Checkout = () => {
                   required
                 />
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                 <input
@@ -89,7 +104,7 @@ const Checkout = () => {
                   required
                 />
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresa</label>
                 <input
@@ -101,7 +116,7 @@ const Checkout = () => {
                   required
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Grad</label>
@@ -128,12 +143,12 @@ const Checkout = () => {
               </div>
             </form>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-4">Način plaćanja</h2>
-            
+
             <div className="space-y-4">
-              <div 
+              <div
                 className={`border rounded-md p-4 cursor-pointer ${paymentMethod === 'card' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
                 onClick={() => setPaymentMethod('card')}
               >
@@ -148,7 +163,7 @@ const Checkout = () => {
                     <span className="font-medium">Kartica</span>
                   </div>
                 </div>
-                
+
                 {paymentMethod === 'card' && (
                   <div className="mt-4 space-y-4">
                     <div>
@@ -162,7 +177,7 @@ const Checkout = () => {
                         className="w-full p-2 border border-gray-300 rounded-md"
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Datum isteka</label>
@@ -190,8 +205,8 @@ const Checkout = () => {
                   </div>
                 )}
               </div>
-              
-              <div 
+
+              <div
                 className={`border rounded-md p-4 cursor-pointer ${paymentMethod === 'cash' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
                 onClick={() => setPaymentMethod('cash')}
               >
@@ -206,70 +221,65 @@ const Checkout = () => {
                     <span className="font-medium">Pouzeće</span>
                   </div>
                 </div>
-                
+
                 {paymentMethod === 'cash' && (
                   <div className="mt-4 text-sm text-gray-600">
-                    Plaćanje prilikom preuzimanja robe. Dodatna naknada za pouzeće iznosi 10 kn.
+                    Plaćanje prilikom preuzimanja robe. Dodatna naknada za pouzeće iznosi {cashOnDeliveryFee.toFixed(2)} €.
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
-        
+
         <div>
           <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
             <h2 className="text-xl font-bold mb-4">Sažetak narudžbe</h2>
-            
+
             <div className="space-y-4 mb-6">
-              <div className="flex justify-between">
-                <span>Artikl 1 x 1</span>
-                <span>150,00 kn</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Artikl 2 x 2</span>
-                <span>300,00 kn</span>
-              </div>
+              {cartTotal === 0 && (
+                <div className="text-center text-gray-500">Košarica je prazna.</div>
+              )}
+
+              {cartTotal > 0 && (
+                <div className="flex justify-between font-medium">
+                  <span>Cijena proizvoda + PDV</span>
+                  <span>{cartTotal.toFixed(2)} €</span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span>Dostava</span>
-                <span>30,00 kn</span>
+                <span>{deliveryFee.toFixed(2)} €</span>
               </div>
+
               {paymentMethod === 'cash' && (
                 <div className="flex justify-between">
                   <span>Naknada za pouzeće</span>
-                  <span>10,00 kn</span>
+                  <span>{cashOnDeliveryFee.toFixed(2)} €</span>
                 </div>
               )}
-              
+
               <div className="border-t pt-4">
                 <div className="flex justify-between font-bold text-lg">
                   <span>Ukupno</span>
-                  <span>{paymentMethod === 'cash' ? '490,00 kn' : '480,00 kn'}</span>
+                  <span>{total.toFixed(2)} €</span>
                 </div>
               </div>
             </div>
-            
-            <div className="mb-6">
-              <div className="flex items-center text-sm text-gray-600 mb-2">
-                <FaLock className="mr-2 text-gray-500" />
-                <span>Sigurna online transakcija</span>
-              </div>
-              <p className="text-xs text-gray-500">
-                Vaši osobni podaci bit će korišteni za procesuiranje vaše narudžbe, poboljšanje vašeg iskustva korištenja web stranice i druge svrhe opisane u našoj Politici privatnosti.
-              </p>
-            </div>
-            
+
             <button
               onClick={handleSubmit}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md font-medium transition duration-200"
+              disabled={cartTotal === 0}
+              className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
             >
               Potvrdi narudžbu
             </button>
-            
-            <div className="mt-4 text-center text-sm text-gray-500">
-              Klikom na "Potvrdi narudžbu" potvrđujete da se slažete s našim{' '}
-              <Link to="/terms" className="text-blue-600 hover:underline">Uvjetima kupnje</Link>.
-            </div>
+
+            <Link to="/cart" className="flex justify-center mt-4 text-red-600 hover:underline">
+              <FaTrash className="mr-2" />
+              Isprazni košaricu
+            </Link>
           </div>
         </div>
       </div>

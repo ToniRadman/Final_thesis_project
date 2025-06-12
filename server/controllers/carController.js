@@ -32,6 +32,15 @@ async function getAllCars(req, res) {
 
     const filters = {};
 
+    const { search } = req.query;
+
+    if (search) {
+      filters.OR = [
+        { make: { contains: search, mode: 'insensitive' } },
+        { model: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
     if (make) filters.make = { contains: make, mode: 'insensitive' };
     if (model) filters.model = { contains: model, mode: 'insensitive' };
     
@@ -64,7 +73,9 @@ async function getAllCars(req, res) {
     const data = cars.map(car => ({
       ...car,
       statusColor: getStatusColor(car.status),
+      name: `${car.make} ${car.model}`,
     }));
+
 
     res.json(convertBigInts({
       data,
@@ -83,20 +94,19 @@ async function getAllCars(req, res) {
 
 async function getCarById(req, res) {
   const { id } = req.params;
-  
-  // Provjeri da li je ID valjan broj
+
   if (!id || isNaN(id)) {
     return res.status(400).json({ message: 'Neispravan ID vozila' });
   }
-  
+
   try {
     const car = await prisma.car.findUnique({
-      where: { id: BigInt(id) }, // Koristi BigInt za ID
+      where: { id: BigInt(id) },
       include: {
         sales: true,
         inventory: true,
         services: true,
-        bookings: true,
+        bookings: true, // rezervacije
       },
     });
 
@@ -104,12 +114,29 @@ async function getCarById(req, res) {
       return res.status(404).json({ message: 'Vozilo nije pronađeno' });
     }
 
-    const carWithColor = {
-      ...car,
+    // Izračun dostupnosti: nema aktivnih rezervacija sa statusom PENDING ili CONFIRMED
+    const available = !car.bookings.some(
+      (booking) => booking.status === 'PENDING' || booking.status === 'CONFIRMED'
+    );
+
+    // Pripremi objekt za frontend s poljima koja koristi
+    const carForFrontend = {
+      id: car.id.toString(),            // string jer frontend obično to očekuje
+      make: car.make,
+      model: car.model,
+      year: car.year,
+      kilometers: car.km,               // uskladi ime s frontendom
+      fuelType: car.fuel,               // uskladi ime s frontendom
+      price: car.price,
+      imagePath: car.imagePath,         // može biti string ili null
+      images: car.imagePath ? [car.imagePath] : [],
+      available,
+      status: car.status,
       statusColor: getStatusColor(car.status),
+      // možeš dodati ostale relacije ako trebaš (sales, inventory, services) po potrebi
     };
 
-    res.json(convertBigInts(carWithColor));
+    res.json(convertBigInts(carForFrontend));
   } catch (error) {
     console.error('Greška u getCarById:', error);
     res.status(500).json({ message: 'Greška na serveru prilikom dohvaćanja vozila' });
@@ -127,7 +154,6 @@ async function createCar(req, res) {
     fuel,
     km,
     imagePath, // Promijenjeno s 'image' na 'imagePath' prema shemi
-    isNew // Ovo polje ne postoji u shemi - ukloniti ili dodati u shemu
   } = req.body;
 
   // Validacija obaveznih polja
@@ -154,7 +180,6 @@ async function createCar(req, res) {
         fuel,
         km: km ? Number(km) : null,
         imagePath,
-        // isNew polje ne postoji u shemi - uklanjamo ga
       },
     });
 
@@ -301,55 +326,71 @@ async function uploadCarImage(req, res) {
 
 async function getCarFilters(req, res) {
   try {
-    // Dohvati jedinstvene vrijednosti za marke, modele, kategorije i godine
-    const [brands, models, categories, years] = await Promise.all([
-      prisma.car.findMany({
-        distinct: ['make'],
-        select: { make: true },
-        orderBy: { make: 'asc' },
-      }),
-      prisma.car.findMany({
-        distinct: ['model'],
-        select: { model: true },
-        orderBy: { model: 'asc' },
-      }),
-      prisma.car.findMany({
-        distinct: ['category'],
-        select: { category: true },
-        orderBy: { category: 'asc' },
-      }),
-      prisma.car.findMany({
-        distinct: ['year'],
-        select: { year: true },
-        orderBy: { year: 'desc' },
-      }),
-    ]);
+    // Dohvati sve aute s potrebnim poljima
+    const cars = await prisma.car.findMany({
+      select: {
+        make: true,
+        model: true,
+        category: true,
+        year: true,
+      },
+    });
 
-    // Pretvori u niz jednostavnih vrijednosti
-    const uniqueBrands = brands.map(b => b.make).filter(Boolean);
-    const uniqueModels = models.map(m => m.model).filter(Boolean);
-    const uniqueCategories = categories.map(c => c.category).filter(c => c !== null && c !== undefined);
-    const uniqueYears = years.map(y => y.year).filter(y => y !== null && y !== undefined);
+    // Setovi za jedinstvene vrijednosti
+    const brandsSet = new Set();
+    const categoriesSet = new Set();
+    const yearsSet = new Set();
+    const modelsByBrand = {};
+
+    for (const car of cars) {
+      if (car.make) {
+        brandsSet.add(car.make);
+
+        if (!modelsByBrand[car.make]) {
+          modelsByBrand[car.make] = new Set();
+        }
+
+        if (car.model) {
+          modelsByBrand[car.make].add(car.model);
+        }
+      }
+
+      if (car.category) {
+        categoriesSet.add(car.category);
+      }
+
+      if (car.year !== null) {
+        yearsSet.add(car.year);
+      }
+    }
+
+    const brands = Array.from(brandsSet).sort();
+    const categories = Array.from(categoriesSet).sort();
+    const years = Array.from(yearsSet).sort((a, b) => b - a);
+
+    const models = {};
+    for (const make in modelsByBrand) {
+      models[make] = Array.from(modelsByBrand[make]).sort();
+    }
 
     res.json({
-      brands: uniqueBrands,
-      models: uniqueModels,
-      categories: uniqueCategories,
-      years: uniqueYears,
+      brands,
+      models,
+      categories,
+      years,
     });
   } catch (error) {
     console.error('Greška pri dohvaćanju filtera:', error);
 
-    res.json({
+    res.status(500).json({
       brands: [],
-      models: [],
+      models: {},
       categories: ['SUV', 'LIMUZINA', 'KOMBI', 'HATCHBACK', 'KARAVAN', 'PICKUP', 'COUPE', 'KABRIOLET'],
       years: [],
-      error: 'Greška pri dohvaćanju filtera iz baze'
+      error: 'Greška pri dohvaćanju filtera iz baze',
     });
   }
 }
-
 
 module.exports = {
   getAllCars,

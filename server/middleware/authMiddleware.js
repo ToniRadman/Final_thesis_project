@@ -12,7 +12,6 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, secretKey, (err, user) => {
     if (err) return res.status(403).json({ message: 'Token nije validan ili je istekao' });
-
     req.user = user; // user sadrži payload tokena (npr. id, email, role)
     next();
   });

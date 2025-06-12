@@ -1,5 +1,11 @@
 -- CreateEnum
-CREATE TYPE "ReservationStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
+CREATE TYPE "BookingType" AS ENUM ('TEST_DRIVE', 'INSPECTION', 'SERVICE');
+
+-- CreateEnum
+CREATE TYPE "VehicleCategory" AS ENUM ('SUV', 'LIMUZINA', 'KOMBI', 'HATCHBACK', 'KARAVAN', 'PICKUP', 'COUPE', 'KABRIOLET');
+
+-- CreateEnum
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED');
 
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('KLIJENT', 'ZAPOSLENIK', 'ADMIN');
@@ -22,9 +28,13 @@ CREATE TABLE "Car" (
     "id" BIGSERIAL NOT NULL,
     "make" TEXT NOT NULL,
     "model" TEXT NOT NULL,
-    "category" INTEGER NOT NULL,
+    "category" "VehicleCategory" NOT NULL,
     "year" INTEGER NOT NULL,
     "price" DECIMAL(10,2) NOT NULL,
+    "imagePath" TEXT,
+    "fuel" TEXT,
+    "km" INTEGER,
+    "status" TEXT,
 
     CONSTRAINT "Car_pkey" PRIMARY KEY ("id")
 );
@@ -33,7 +43,7 @@ CREATE TABLE "Car" (
 CREATE TABLE "Part" (
     "id" BIGSERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "group" INTEGER NOT NULL,
+    "category" "VehicleCategory" NOT NULL,
     "price" DECIMAL(10,2) NOT NULL,
     "supplierId" BIGINT NOT NULL,
 
@@ -100,17 +110,16 @@ CREATE TABLE "Inventory" (
 );
 
 -- CreateTable
-CREATE TABLE "Reservation" (
+CREATE TABLE "Booking" (
     "id" BIGSERIAL NOT NULL,
-    "customerId" BIGINT NOT NULL,
-    "employeeId" BIGINT,
+    "userId" BIGINT NOT NULL,
+    "bookingType" "BookingType" NOT NULL,
     "carId" BIGINT,
-    "type" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
-    "status" "ReservationStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Reservation_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -156,10 +165,7 @@ ALTER TABLE "Inventory" ADD CONSTRAINT "Inventory_carId_fkey" FOREIGN KEY ("carI
 ALTER TABLE "Inventory" ADD CONSTRAINT "Inventory_partId_fkey" FOREIGN KEY ("partId") REFERENCES "Part"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_carId_fkey" FOREIGN KEY ("carId") REFERENCES "Car"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_carId_fkey" FOREIGN KEY ("carId") REFERENCES "Car"("id") ON DELETE SET NULL ON UPDATE CASCADE;

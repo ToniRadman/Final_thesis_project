@@ -123,14 +123,14 @@ model Inventory {
 model Booking {
   id          BigInt    @id @default(autoincrement())
   userId      BigInt
-  type        BookingType
-  carId       BigInt?
+  bookingType   BookingType
+  carId       BigInt
   date        DateTime
   status      BookingStatus  @default(PENDING)
   createdAt   DateTime @default(now())
 
   user        User      @relation(fields: [userId], references: [id])
-  car         Car?      @relation(fields: [carId], references: [id])
+  car         Car      @relation(fields: [carId], references: [id])
 }
 
 enum BookingType {

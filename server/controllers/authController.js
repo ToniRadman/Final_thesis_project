@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const { convertBigInts } = require('../utils/convertBigInts');
 const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -46,10 +47,12 @@ async function loginUser(req, res) {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Neispravan email ili lozinka' });
 
-    // Generiraj JWT token
-    const token = jwt.sign({ id: user.id.toString() }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user.id.toString(), role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+    
+    // Makni lozinku iz odgovora
+    const { password: _, ...userData } = user;
 
-    res.json({ token });
+    res.json(convertBigInts({ token, user: userData }));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });

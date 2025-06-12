@@ -21,13 +21,13 @@ router.get('/:id', getCarById);
 router.use(authenticateToken);
 
 // Za kreiranje, update i delete samo ZAPOSLENIK ili ADMIN
-router.post('/', authorizeRoles('ZAPOSLENIK', 'ADMIN'), validate(carSchema), createCar);
-router.put('/:id', authorizeRoles('ZAPOSLENIK', 'ADMIN'), validate(carSchema), updateCar);
+router.post('/', authorizeRoles(['ZAPOSLENIK', 'ADMIN']), validate(carSchema), createCar);
+router.put('/:id', authorizeRoles(['ZAPOSLENIK', 'ADMIN']), validate(carSchema), updateCar);
 router.delete('/:id', authorizeRoles('ADMIN'), deleteCar);
 
 router.post(
   '/:id/image',
-  authorizeRoles('ZAPOSLENIK', 'ADMIN'),
+  authorizeRoles(['ZAPOSLENIK', 'ADMIN']),
   upload.single('image'),
   uploadCarImage
 );

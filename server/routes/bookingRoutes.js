@@ -10,14 +10,14 @@ const {
 const { createBookingSchema, updateStatusSchema } = require('../validators/bookingValidator');
 const { validate } = require('../middleware/validate');
 
-// Kreiranje rezervacije (samo klijent)
-router.post('/', authenticateToken, authorizeRoles('KLIJENT'), validate(createBookingSchema), createBooking);
+// Kreiranje rezervacije
+router.post('/', authenticateToken, authorizeRoles(['KLIJENT', 'ADMIN']), validate(createBookingSchema), createBooking);
 
 // Dohvat rezervacija (klijent vidi samo svoje, zaposlenik i admin sve)
 router.get('/', authenticateToken, getBookings);
 
 // Ažuriranje statusa (samo zaposlenik i admin)
-router.patch('/:id/status', authenticateToken, authorizeRoles('ZAPOSLENIK', 'ADMIN'), validate(updateStatusSchema), updateBookingStatus);
+router.patch('/:id/status', authenticateToken, authorizeRoles(['ZAPOSLENIK', 'ADMIN']), validate(updateStatusSchema), updateBookingStatus);
 
 // Brisanje rezervacije (admin)
 router.delete('/:id', authenticateToken, authorizeRoles('ADMIN'), deleteBooking);

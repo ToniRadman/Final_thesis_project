@@ -1,5 +1,6 @@
 // controllers/supplierController.js
 const { PrismaClient } = require('@prisma/client');
+const { converBigInts } = require('../utils/convertBigInts')
 const prisma = new PrismaClient();
 
 async function getAllSuppliers(req, res) {
@@ -9,7 +10,7 @@ async function getAllSuppliers(req, res) {
         parts: true,
       },
     });
-    res.json(suppliers);
+    res.json(converBigInts(suppliers));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
