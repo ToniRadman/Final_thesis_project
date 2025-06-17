@@ -1,9 +1,34 @@
 import { FaTrash, FaShoppingCart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useEffect, useState } from 'react';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, tax, subtotal } = useCart();
+
+  const [stockMap, setStockMap] = useState({});
+
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    async function fetchStock() {
+      const stockData = {};
+      for (const item of cartItems) {
+        const res = await fetch(`/api/inventory/part/${item.id}`,  {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          stockData[item.id] = data.quantity;
+        }
+      }
+      setStockMap(stockData);
+    }
+
+    fetchStock();
+  }, [cartItems]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -53,7 +78,14 @@ const Cart = () => {
                       </button>
                       <span className="px-3 py-1">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => {
+                          const max = stockMap[item.id] ?? Infinity;
+                          if (item.quantity + 1 > max) {
+                            alert(`Dostupno na skladištu: ${max}`);
+                            return;
+                          }
+                          updateQuantity(item.id, item.quantity + 1);
+                        }}
                         className="px-3 py-1 text-gray-600 hover:bg-gray-100"
                       >
                         +

@@ -1,86 +1,70 @@
-// prisma/seeds/seedSales.js
-
-const WayOfPayment = {
-  CARD: 1,
-  CASH_ON_PICKUP: 2,
-};
+// prisma/seedHelpers/sales.js
 
 module.exports = async function seedSales(prisma) {
+  await prisma.saleItem.deleteMany();
   await prisma.sale.deleteMany();
-  // Pretpostavljamo da već postoje korisnici, automobili i dijelovi
+
   const customers = await prisma.user.findMany({ where: { role: 'KLIJENT' }, take: 5 });
-  const employees = await prisma.user.findMany({ where: { role: 'ZAPOSLENIK' }, take: 5 });
-  const cars = await prisma.car.findMany({ take: 5 });
-  const parts = await prisma.part.findMany({ take: 5 });
+  const inventories = await prisma.inventory.findMany({
+    where: {
+      OR: [
+        { carId: { not: null } },
+        { partId: { not: null } },
+      ],
+    },
+    take: 10,
+  });
 
-  if (customers.length === 0) {
-    console.log('❌ Nema korisnika za kreiranje prodaja');
-    return;
-  }
-  if (employees.length === 0) {
-    console.log('❌ Nema zaposlenika za kreiranje prodaja');
-    return;
-  }
-  if (cars.length === 0) {
-    console.log('❌ Nema automobila za kreiranje prodaja');
-    return;
-  }
-  if (parts.length === 0) {
-    console.log('❌ Nema dijelova za kreiranje prodaja');
+  if (!customers.length || !inventories.length) {
+    console.log('❌ Nedovoljno podataka za seedanje prodaja');
     return;
   }
 
-  const salesData = [
-    {
-      carId: cars[0]?.id,
-      partId: null,
-      employeeId: employees[0]?.id,
-      customerId: customers[0].id,
-      saleDate: new Date('2024-01-15T10:00:00Z'),
-      totalPrice: 15000.00,
-      wayOfPayment: WayOfPayment.CARD,
-    },
-    {
-      carId: null,
-      partId: parts[0]?.id,
-      employeeId: employees[1]?.id,
-      customerId: customers[1].id,
-      saleDate: new Date('2024-02-20T12:30:00Z'),
-      totalPrice: 250.00,
-      wayOfPayment: WayOfPayment.CASH_ON_PICKUP,
-    },
-    {
-      carId: cars[1]?.id,
-      partId: null,
-      employeeId: employees[2]?.id,
-      customerId: customers[2].id,
-      saleDate: new Date('2024-03-05T14:00:00Z'),
-      totalPrice: 18000.00,
-      wayOfPayment: WayOfPayment.CARD,
-    },
-    {
-      carId: null,
-      partId: parts[1]?.id,
-      employeeId: employees[3]?.id,
-      customerId: customers[3].id,
-      saleDate: new Date('2024-04-10T09:00:00Z'),
-      totalPrice: 350.00,
-      wayOfPayment: WayOfPayment.CASH_ON_PICKUP,
-    },
-    {
-      carId: cars[2]?.id,
-      partId: null,
-      employeeId: employees[1]?.id,
-      customerId: customers[2].id,
-      saleDate: new Date('2024-05-22T16:45:00Z'),
-      totalPrice: 22000.00,
-      wayOfPayment: WayOfPayment.CARD,
-    },
-  ];
+  const paymentMethods = ['CARD', 'CASH'];
 
-  for (const sale of salesData) {
-    await prisma.sale.create({ data: sale });
+  for (let i = 0; i < 5; i++) {
+    const customer = customers[i % customers.length];
+    const inventoryItem = inventories[i % inventories.length];
+
+    // Dobavi cijenu iz povezane tabele car ili part
+    let unitPrice = 1000;
+    if (inventoryItem.carId) {
+      const car = await prisma.car.findUnique({ where: { id: inventoryItem.carId } });
+      unitPrice = parseFloat(car?.price?.toString() ?? '10000');
+    } else if (inventoryItem.partId) {
+      const part = await prisma.part.findUnique({ where: { id: inventoryItem.partId } });
+      unitPrice = parseFloat(part?.price?.toString() ?? '100');
+    }
+
+    // quantity je random između 1 i 3, a inventory.quantity je BigInt - konvertiraj na Number
+    const maxQty = Number(inventoryItem.quantity);
+    const quantity = Math.min(Math.floor(Math.random() * 3) + 1, maxQty > 0 ? maxQty : 1);
+
+    const total = unitPrice * quantity;
+
+    await prisma.sale.create({
+      data: {
+        userId: customer.id,
+        paymentMethod: paymentMethods[i % paymentMethods.length],
+        total,
+        createdAt: new Date(2024, i, 10 + i),
+        customerFirstName: customer.firstName,
+        customerLastName: customer.lastName,
+        customerEmail: customer.email,
+        customerPhone: customer.phone ?? '',
+        customerAddress: 'N/A', // Ako nemaš adresu u useru, možeš staviti placeholder
+        customerCity: 'N/A',
+        customerPostalCode: 'N/A',
+        saleItems: {
+          create: {
+            inventoryId: inventoryItem.id,
+            quantity,
+            price: unitPrice,
+          }
+        }
+      }
+    });
   }
 
-  console.log('✅ Sales seeded');
+  console.log('✅ Sales with SaleItems seeded successfully');
 };

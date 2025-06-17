@@ -19,8 +19,8 @@ router.get('/', getAllParts);
 router.get('/filters', getPartFilters);
 router.get('/:id', getPartById);
 
-router.post('/', authorizeRoles('ZAPOSLENIK', 'ADMIN'), validate(createPartSchema), createPart);
-router.put('/:id', authorizeRoles('ZAPOSLENIK', 'ADMIN'), validate(updatePartSchema), updatePart);
+router.post('/', authorizeRoles(['ZAPOSLENIK', 'ADMIN']), validate(createPartSchema), createPart);
+router.put('/:id', authorizeRoles(['ZAPOSLENIK', 'ADMIN']), validate(updatePartSchema), updatePart);
 router.delete('/:id', authorizeRoles('ADMIN'), deletePart);
 
 module.exports = router;

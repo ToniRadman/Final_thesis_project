@@ -12,7 +12,7 @@ const statusColors = {
     CANCELLED: 'bg-red-100 text-red-800',
 };
 
-const ReservationList = () => {
+const ReservationList = ({ refreshKey }) => {
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth(); // koristi auth kontekst
@@ -38,12 +38,18 @@ const ReservationList = () => {
         };
 
         if (user) fetchReservations();
-    }, [user]);
+    }, [user, refreshKey]);
 
 
     const handleStatusChange = async (id, newStatus) => {
         try {
-            await axios.patch(`/api/bookings/${id}`, { status: newStatus });
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            await axios.patch(`/api/bookings/${id}/status`, { status: newStatus }, config);
             setReservations((prev) =>
                 prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
             );
@@ -71,7 +77,13 @@ const ReservationList = () => {
                                         {res.car.make} {res.car.model} ({res.car.year})
                                     </p>
                                     <p className="text-sm text-gray-500">
-                                        {new Date(res.date).toLocaleDateString()} — {res.bookingType}
+                                        {new Date(res.date).toLocaleString(undefined, {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })} — {res.bookingType}
                                     </p>
                                     {res.customer && (
                                         <p className="text-sm text-gray-500">

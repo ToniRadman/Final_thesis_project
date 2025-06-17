@@ -11,12 +11,15 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const bookingsRoutes = require('./routes/bookingRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const enumRoutes = require('./routes/enumRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: 'http://localhost:5173'
+  origin: 'http://localhost:5173',
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 
@@ -43,6 +46,8 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 app.use('/api/enums', enumRoutes);
+
+app.use('/api/payment', paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server je pokrenut na portu ${PORT}`);

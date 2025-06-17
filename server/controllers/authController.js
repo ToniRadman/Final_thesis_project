@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 async function registerUser(req, res) {
-  const { firstName, lastName, email, password, role } = req.body;
+  const { firstName, lastName, email, phone, password, role } = req.body;
 
   try {
     // Provjera postoji li korisnik
@@ -25,6 +25,7 @@ async function registerUser(req, res) {
         firstName,
         lastName,
         email,
+        phone,
         password: hashedPassword,  // **VAŽNO** - dodaj polje password u User model u Prisma schema!
         role,
       },

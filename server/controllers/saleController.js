@@ -1,17 +1,32 @@
 // controllers/saleController.js
 const { PrismaClient } = require('@prisma/client');
+const { convertBigInts } = require('../utils/convertBigInts');
 const prisma = new PrismaClient();
 
 async function getAllSales(req, res) {
+  const userId = req.user?.id;
+  const userRole = req.user?.role;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Niste prijavljeni' });
+  }
+
   try {
-    const sales = await prisma.sale.findMany({
-      include: {
-        car: true,
-        part: true,
-        customer: true,
-        employee: true,
-      },
-    });
+    let sales;
+
+    if (userRole === 'ADMIN' || userRole === 'ZAPOSLENIK') {
+      // Admin vidi sve račune
+      sales = await prisma.sale.findMany({
+        include: { saleItems: true }
+      });
+    } else {
+      // Klijent vidi samo svoje račune
+      sales = await prisma.sale.findMany({
+        where: { userId },
+        include: { saleItems: true }
+      });
+    }
+
     res.json(sales);
   } catch (error) {
     console.error(error);
@@ -40,46 +55,64 @@ async function getSaleById(req, res) {
 }
 
 async function createSale(req, res) {
-  const { carId, partId, employeeId, customerId, saleDate, totalPrice, wayOfPayment } = req.body;
-  try {
-    const newSale = await prisma.sale.create({
-      data: {
-        carId,
-        partId,
-        employeeId,
-        customerId,
-        saleDate: new Date(saleDate),
-        totalPrice,
-        wayOfPayment,
-      },
-    });
-    res.status(201).json(newSale);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
-  }
-}
+  const { customer, paymentMethod, total, items } = req.body;
+  const { userId } = req.user;
 
-async function updateSale(req, res) {
-  const { id } = req.params;
-  const { carId, partId, employeeId, customerId, saleDate, totalPrice, wayOfPayment } = req.body;
+  console.log('Sale data:', req.body);
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Niste prijavljeni' });
+  }
+
   try {
-    const updatedSale = await prisma.sale.update({
-      where: { id: Number(id) },
-      data: {
-        carId,
-        partId,
-        employeeId,
-        customerId,
-        saleDate: new Date(saleDate),
-        totalPrice,
-        wayOfPayment,
-      },
+    const sale = await prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        const inventory = await tx.inventory.findUnique({ where: { id: item.inventoryId } });
+        if (!inventory || inventory.quantity < item.quantity) {
+          throw new Error(`Nema dovoljno zaliha za proizvod ID: ${item.inventoryId}`);
+        }
+      }
+
+      const createdSale = await tx.sale.create({
+        data: {
+          userId,
+          paymentMethod,
+          total,
+          customerFirstName: customer.firstName,
+          customerLastName: customer.lastName,
+          customerEmail: customer.email,
+          customerPhone: customer.phone,
+          customerAddress: customer.address,
+          customerCity: customer.city,
+          customerPostalCode: customer.postalCode,
+          saleItems: {
+            create: items.map(item => ({
+              quantity: item.quantity,
+              price: item.price,
+              inventory: { connect: { id: item.inventoryId } }
+            }))
+          }
+        },
+        include: { saleItems: true }
+      });
+
+      for (const item of items) {
+        const inventory = await tx.inventory.findUnique({ where: { id: item.inventoryId } });
+        const newQuantity = inventory.quantity - BigInt(item.quantity);
+        await tx.inventory.update({
+          where: { id: item.inventoryId },
+          data: { quantity: newQuantity }
+        });
+      }
+
+      return createdSale;
     });
-    res.json(updatedSale);
+
+    res.status(201).json(convertBigInts({ message: 'Narudžba uspješno spremljena', sale }));
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
+    console.error('Greška prilikom obrade narudžbe:', error.message);
+    res.status(400).json({ message: error.message || 'Greška prilikom obrade narudžbe' });
   }
 }
 
@@ -98,6 +131,5 @@ module.exports = {
   getAllSales,
   getSaleById,
   createSale,
-  updateSale,
   deleteSale,
 };

@@ -17,6 +17,33 @@ async function createBooking(req, res) {
       'servis': 'SERVICE',
     };
 
+    const newBookingDate = new Date(date);
+
+    const existingUserBooking = await prisma.booking.findFirst({
+      where: {
+        customerId: userId,
+        date: newBookingDate,
+      },
+    });
+    if (existingUserBooking) {
+      return res.status(400).json({
+        message: 'Već imate rezervaciju u to vrijeme.',
+      });
+    }
+
+    const existingCarBooking = await prisma.booking.findFirst({
+      where: {
+        carId: Number(carId),
+        date: newBookingDate,
+      },
+    });
+
+    if (existingCarBooking) {
+      return res.status(400).json({
+        message: 'Vozilo je već rezervirano u odabranom terminu.',
+      });
+    }
+
     const booking = await prisma.booking.create({
       data: {
         customerId: userId, // Prilagodba shemi
@@ -81,7 +108,7 @@ async function updateBookingStatus(req, res) {
       },
     });
 
-    res.json({ message: 'Status rezervacije ažuriran', booking });
+    res.json(convertBigInts({ message: 'Status rezervacije ažuriran', booking }));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška pri ažuriranju statusa rezervacije' });

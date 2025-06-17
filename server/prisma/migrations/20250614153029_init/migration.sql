@@ -64,15 +64,30 @@ CREATE TABLE "Supplier" (
 -- CreateTable
 CREATE TABLE "Sale" (
     "id" BIGSERIAL NOT NULL,
-    "carId" BIGINT,
-    "partId" BIGINT,
-    "employeeId" BIGINT,
-    "customerId" BIGINT NOT NULL,
-    "saleDate" TIMESTAMP(3) NOT NULL,
-    "totalPrice" DECIMAL(10,2) NOT NULL,
-    "wayOfPayment" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "paymentMethod" TEXT NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL,
+    "userId" BIGINT NOT NULL,
+    "customerFirstName" TEXT NOT NULL,
+    "customerLastName" TEXT NOT NULL,
+    "customerEmail" TEXT NOT NULL,
+    "customerPhone" TEXT NOT NULL,
+    "customerAddress" TEXT NOT NULL,
+    "customerCity" TEXT NOT NULL,
+    "customerPostalCode" TEXT NOT NULL,
 
     CONSTRAINT "Sale_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SaleItem" (
+    "id" BIGSERIAL NOT NULL,
+    "quantity" BIGINT NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "inventoryId" BIGINT NOT NULL,
+    "saleId" BIGINT NOT NULL,
+
+    CONSTRAINT "SaleItem_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -130,16 +145,13 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 ALTER TABLE "Part" ADD CONSTRAINT "Part_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Sale" ADD CONSTRAINT "Sale_carId_fkey" FOREIGN KEY ("carId") REFERENCES "Car"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Sale" ADD CONSTRAINT "Sale_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Sale" ADD CONSTRAINT "Sale_partId_fkey" FOREIGN KEY ("partId") REFERENCES "Part"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_inventoryId_fkey" FOREIGN KEY ("inventoryId") REFERENCES "Inventory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Sale" ADD CONSTRAINT "Sale_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Sale" ADD CONSTRAINT "Sale_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "Sale"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ServiceRecord" ADD CONSTRAINT "ServiceRecord_carId_fkey" FOREIGN KEY ("carId") REFERENCES "Car"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

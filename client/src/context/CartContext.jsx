@@ -1,18 +1,56 @@
-import { createContext, useContext, useState, useMemo } from 'react';
+import { createContext, useContext, useState, useMemo, useEffect } from 'react';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  // Inicijalno učitavanje cartItems iz localStorage ili prazno ako nema
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cartItems');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  const addToCart = (item) => {
+  // Spremi cartItems u localStorage kad se promijene
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  const addToCart = async (item) => {
+    const token = localStorage.getItem('token'); // dohvati token
+
+    const res = await fetch(`/api/inventory/part/${item.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // pošalji token u headeru
+      },
+    });
+
+    if (!res.ok) {
+      alert('Greška pri dohvaćanju zaliha.');
+      return;
+    }
+
+    const inventoryItem = await res.json();
+    const availableQuantity = inventoryItem.quantity;
+
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
+      const currentQuantity = existing ? existing.quantity : 0;
+      const newQuantity = currentQuantity + item.quantity;
+
+      if (newQuantity > availableQuantity) {
+        alert(`Nema dovoljno na skladištu. Dostupno: ${availableQuantity}`);
+        return prev;
+      }
+
       if (existing) {
         return prev.map(i =>
-          i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+          i.id === item.id ? { ...i, quantity: newQuantity } : i
         );
       }
+
       return [...prev, item];
     });
   };

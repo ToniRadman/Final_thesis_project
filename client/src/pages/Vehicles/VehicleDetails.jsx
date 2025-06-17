@@ -45,7 +45,13 @@ const VehicleDetails = () => {
     if (!window.confirm('Jeste li sigurni da želite obrisati ovo vozilo?')) return;
 
     try {
-      await axios.delete(`/api/cars/${id}`);
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      await axios.delete(`/api/cars/${id}`, config);
       alert('Vozilo je uspješno obrisano.');
       navigate('/'); // vraćanje na listu vozila
     } catch (err) {
@@ -79,9 +85,8 @@ const VehicleDetails = () => {
               <button
                 key={idx}
                 onClick={() => setMainImage(img)}
-                className={`border-2 rounded-md overflow-hidden ${
-                  mainImage === img ? 'border-blue-500' : 'border-transparent'
-                }`}
+                className={`border-2 rounded-md overflow-hidden ${mainImage === img ? 'border-blue-500' : 'border-transparent'
+                  }`}
               >
                 <img src={img} alt={`thumb_${idx}`} className="w-full h-20 object-cover" />
               </button>
@@ -124,11 +129,11 @@ const VehicleDetails = () => {
               </div>
               <div className="flex items-center">
                 <FaTachometerAlt className="mr-1 text-blue-500" />
-                <span>{vehicle.kilometers?.toLocaleString() || '—'} km</span>
+                <span>{vehicle.km?.toLocaleString() || '—'} km</span>
               </div>
               <div className="flex items-center">
                 <FaGasPump className="mr-1 text-blue-500" />
-                <span>{vehicle.fuelType || '—'}</span>
+                <span>{vehicle.fuel || '—'}</span>
               </div>
             </div>
 
@@ -137,9 +142,8 @@ const VehicleDetails = () => {
                 {vehicle.price.toLocaleString()} €
               </div>
               <div
-                className={`text-sm font-medium px-2.5 py-0.5 rounded-full inline-block ${
-                  vehicle.available ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}
+                className={`text-sm font-medium px-2.5 py-0.5 rounded-full inline-block ${vehicle.available ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}
               >
                 {vehicle.available ? 'Dostupno za rezervaciju' : 'Trenutno rezervirano'}
               </div>
@@ -152,8 +156,14 @@ const VehicleDetails = () => {
           </div>
 
           <div className="mt-8">
-            {isLoggedIn && vehicle.available ? (
-              <ReservationForm carId={vehicle.id} />
+            {isLoggedIn ? (
+              vehicle.available ? (
+                <ReservationForm carId={vehicle.id} />
+              ) : (
+                <div className="p-4 border rounded-md text-center text-gray-500">
+                  Vozilo je trenutno rezervirano. Molimo pokušajte kasnije.
+                </div>
+              )
             ) : (
               <div className="p-4 border rounded-md text-center text-gray-500">
                 Molimo prijavite se da biste mogli rezervirati vozilo.

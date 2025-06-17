@@ -11,7 +11,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/users', {
+      const res = await fetch('/api/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -34,8 +34,8 @@ const UserManagement = () => {
     e.preventDefault();
 
     const url = editingUser
-      ? `http://localhost:5000/api/users/${editingUser.id}`
-      : 'http://localhost:5000/api/auth/register';
+      ? `/api/users/${editingUser.id}`
+      : '/api/auth/register';
 
     const method = editingUser ? 'PUT' : 'POST';
 
@@ -71,7 +71,7 @@ const UserManagement = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Jeste li sigurni da želite obrisati korisnika?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+      const res = await fetch(`/api/users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

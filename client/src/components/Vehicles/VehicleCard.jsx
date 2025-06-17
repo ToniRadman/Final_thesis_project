@@ -13,9 +13,6 @@ const VehicleCard = ({ vehicle }) => {
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
       <div className="relative">
         <img src={vehicle.image} alt={vehicle.title} className="w-full h-48 object-cover" />
-        {vehicle.isNew && (
-          <span className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">NOVO</span>
-        )}
       </div>
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">

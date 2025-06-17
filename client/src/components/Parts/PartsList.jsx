@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FaCartPlus, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-import Pagination from './PartsPagination';
+import Pagination from '../Pagination/Pagination';
 import { useCart } from '../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';

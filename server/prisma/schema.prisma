@@ -8,79 +8,93 @@ datasource db {
 }
 
 model User {
-  id        BigInt   @id @default(autoincrement())
+  id        BigInt  @id @default(autoincrement())
   firstName String
   lastName  String
-  email     String   @unique
+  email     String  @unique
   password  String
   phone     String?
   role      Role
 
-  salesAsCustomer   Sale[]         @relation("CustomerSales")
-  salesAsEmployee   Sale[]         @relation("EmployeeSales")
   serviceAsCustomer ServiceRecord[] @relation("CustomerServices")
   serviceAsEmployee ServiceRecord[] @relation("EmployeeServices")
   serviceAsMechanic ServiceRecord[] @relation("MechanicServices")
 
   bookingsAsCustomer Booking[] @relation("CustomerBookings")
   bookingsAsStaff    Booking[] @relation("StaffBookings")
+
+  sales Sale[]
 }
 
 model Car {
-  id         BigInt           @id @default(autoincrement())
-  make       String
-  model      String
-  category   VehicleCategory  // PRETHODNO: Int
-  year       Int
-  price      Decimal          @db.Decimal(10, 2)
-  imagePath  String?
-  fuel       String?
-  km         Int?
-  status     String?
+  id        BigInt          @id @default(autoincrement())
+  make      String
+  model     String
+  category  VehicleCategory
+  year      Int
+  price     Decimal         @db.Decimal(10, 2)
+  imagePath String?
+  fuel      String?
+  km        Int?
+  status    String?
 
-  sales        Sale[]
-  inventory    Inventory[]
-  services     ServiceRecord[]
-  bookings     Booking[]
+  inventory Inventory[]
+  services  ServiceRecord[]
+  bookings  Booking[]
 }
 
 model Part {
-  id         BigInt  @id @default(autoincrement())
+  id         BigInt          @id @default(autoincrement())
   name       String
   category   VehicleCategory
-  price      Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
+  price      Decimal         @db.Decimal(10, 2)
   supplierId BigInt
 
-  supplier    Supplier @relation(fields: [supplierId], references: [id])
-  inventory   Inventory[]
-  sales       Sale[]
+  supplier     Supplier      @relation(fields: [supplierId], references: [id])
+  inventory    Inventory[]
   serviceParts ServicePart[]
 }
 
 model Supplier {
-  id          BigInt  @id @default(autoincrement())
+  id          BigInt @id @default(autoincrement())
   name        String
   contactName String
   email       String
-  phone       String    // Promijenjeno iz BigInt u String
+  phone       String
 
-  parts       Part[]
+  parts Part[]
 }
 
 model Sale {
-  id          BigInt   @id @default(autoincrement())
-  carId       BigInt?
-  partId      BigInt?
-  employeeId  BigInt?
-  customerId  BigInt
-  saleDate    DateTime
-  totalPrice  Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
-  wayOfPayment Int
+  id            BigInt      @id @default(autoincrement())
+  createdAt     DateTime    @default(now())
+  paymentMethod String
+  total         Decimal     @db.Decimal(10, 2)  // Changed from Float to Decimal
 
-  car        Car?     @relation(fields: [carId], references: [id])
-  part       Part?    @relation(fields: [partId], references: [id])
-  customer   User     @relation("CustomerSales", fields: [customerId], references: [id])
-  employee   User?    @relation("EmployeeSales", fields: [employeeId], references: [id])
+  userId        BigInt
+  user          User     @relation(fields: [userId], references: [id])
+
+  customerFirstName String
+  customerLastName  String
+  customerEmail     String
+  customerPhone     String
+  customerAddress   String
+  customerCity      String
+  customerPostalCode String
+
+  saleItems SaleItem[]
+}
+
+model SaleItem {
+  id       BigInt          @id @default(autoincrement())
+  quantity BigInt
+  price    Decimal         @db.Decimal(10, 2)  // Changed from Float to Decimal
+
+  inventoryId BigInt
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+
+  saleId BigInt
+  sale   Sale @relation(fields: [saleId], references: [id])
 }
 
 model ServiceRecord {
@@ -90,25 +104,25 @@ model ServiceRecord {
   mechanicId  BigInt
   customerId  BigInt?
   description String
-  price       Decimal  @db.Decimal(10, 2)  // Promijenjeno iz BigInt u Decimal
+  price       Decimal  @db.Decimal(10, 2)
   serviceDate DateTime
 
-  car         Car       @relation(fields: [carId], references: [id])
-  employee    User      @relation("EmployeeServices", fields: [employeeId], references: [id])
-  mechanic    User      @relation("MechanicServices", fields: [mechanicId], references: [id])
-  customer    User?     @relation("CustomerServices", fields: [customerId], references: [id])
+  car      Car   @relation(fields: [carId], references: [id])
+  employee User  @relation("EmployeeServices", fields: [employeeId], references: [id])
+  mechanic User  @relation("MechanicServices", fields: [mechanicId], references: [id])
+  customer User? @relation("CustomerServices", fields: [customerId], references: [id])
 
-  partsUsed   ServicePart[]
+  partsUsed ServicePart[]
 }
 
 model ServicePart {
-  id        BigInt  @id @default(autoincrement())
+  id        BigInt @id @default(autoincrement())
   serviceId BigInt
   partId    BigInt
   quantity  Int
 
-  service   ServiceRecord @relation(fields: [serviceId], references: [id])
-  part      Part          @relation(fields: [partId], references: [id])
+  service ServiceRecord @relation(fields: [serviceId], references: [id])
+  part    Part          @relation(fields: [partId], references: [id])
 }
 
 model Inventory {
@@ -117,23 +131,24 @@ model Inventory {
   partId   BigInt?
   quantity BigInt
 
-  car      Car?  @relation(fields: [carId], references: [id])
-  part     Part? @relation(fields: [partId], references: [id])
+  car       Car?       @relation(fields: [carId], references: [id])
+  part      Part?      @relation(fields: [partId], references: [id])
+  saleItems SaleItem[]
 }
 
 model Booking {
   id          BigInt        @id @default(autoincrement())
   customerId  BigInt
-  staffId     BigInt?       // zaposlenik koji je mijenjao status
+  staffId     BigInt?
   bookingType BookingType
   carId       BigInt
   date        DateTime
   status      BookingStatus @default(PENDING)
   createdAt   DateTime      @default(now())
 
-  customer    User          @relation("CustomerBookings", fields: [customerId], references: [id])
-  staff       User?         @relation("StaffBookings", fields: [staffId], references: [id])
-  car         Car           @relation(fields: [carId], references: [id])
+  customer User  @relation("CustomerBookings", fields: [customerId], references: [id])
+  staff    User? @relation("StaffBookings", fields: [staffId], references: [id])
+  car      Car   @relation(fields: [carId], references: [id])
 }
 
 enum BookingType {

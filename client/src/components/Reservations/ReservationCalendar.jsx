@@ -17,7 +17,7 @@ import { hr } from 'date-fns/locale';
 const services = ['Probna vožnja', 'Pregled vozila', 'Servis'];
 const availableTimes = ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
-const ReservationSection = () => {
+const ReservationSection = ({ onReservationCreated }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState('');
@@ -212,6 +212,7 @@ const ReservationSection = () => {
 
       data = await res.json();
       setMessage({ type: 'success', text: data.message || 'Rezervacija uspješno kreirana!' });
+      onReservationCreated();
 
       // Reset forme
       setSelectedDate(null);

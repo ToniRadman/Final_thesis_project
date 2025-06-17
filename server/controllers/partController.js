@@ -136,24 +136,24 @@ const createPart = async (req, res) => {
       return res.status(400).json({ message: 'Nedostaju obavezna polja: name, category, price, supplierId' });
     }
 
-    // Validacija kategorije
-    if (!validCategories.includes(category)) {
-      return res.status(400).json({ message: 'Neispravna kategorija dijela' });
-    }
-
     const newPart = await prisma.part.create({
       data: {
         name,
         category,
         price: new Prisma.Decimal(price),
         supplierId: BigInt(supplierId),
+        inventory: {
+          create: {
+            quantity: initialQuantity || 0
+          }
+        }
       },
     });
 
-    res.status(201).json({
+    res.status(201).json(convertBigInts({
       ...newPart,
       price: newPart.price.toString(),
-    });
+    }));
   } catch (error) {
     console.error('Greška kod kreiranja dijela:', error);
     res.status(500).json({ message: 'Greška kod kreiranja dijela' });
@@ -170,9 +170,6 @@ const updatePart = async (req, res) => {
     if (name !== undefined) updateData.name = name;
 
     if (category !== undefined) {
-      if (!validCategories.includes(category)) {
-        return res.status(400).json({ message: 'Neispravna kategorija dijela' });
-      }
       updateData.category = category;
     }
 

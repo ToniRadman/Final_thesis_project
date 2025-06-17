@@ -43,18 +43,17 @@ async function getAllCars(req, res) {
 
     if (make) filters.make = { contains: make, mode: 'insensitive' };
     if (model) filters.model = { contains: model, mode: 'insensitive' };
-    
-    // Provjeri da li je category valjan enum
+
     if (category && Object.values(['SUV', 'LIMUZINA', 'KOMBI', 'HATCHBACK', 'KARAVAN', 'PICKUP', 'COUPE', 'KABRIOLET']).includes(category)) {
-      filters.category = category; // Sada je enum, ne broj
+      filters.category = category;
     }
-    
+
     if (yearFrom || yearTo) {
       filters.year = {};
       if (yearFrom) filters.year.gte = Number(yearFrom);
       if (yearTo) filters.year.lte = Number(yearTo);
     }
-    
+
     if (priceMin || priceMax) {
       filters.price = {};
       if (priceMin) filters.price.gte = Number(priceMin);
@@ -76,15 +75,9 @@ async function getAllCars(req, res) {
       name: `${car.make} ${car.model}`,
     }));
 
-
     res.json(convertBigInts({
       data,
-      pagination: {
-        total,
-        page: Number(page),
-        pageSize: Number(pageSize),
-        totalPages: Math.ceil(total / Number(pageSize)),
-      },
+      total,
     }));
   } catch (error) {
     console.error('Greška u getAllCars:', error);
@@ -103,7 +96,7 @@ async function getCarById(req, res) {
     const car = await prisma.car.findUnique({
       where: { id: BigInt(id) },
       include: {
-        sales: true,
+        //sales: true,
         inventory: true,
         services: true,
         bookings: true, // rezervacije
@@ -125,8 +118,8 @@ async function getCarById(req, res) {
       make: car.make,
       model: car.model,
       year: car.year,
-      kilometers: car.km,               // uskladi ime s frontendom
-      fuelType: car.fuel,               // uskladi ime s frontendom
+      km: car.km,               // uskladi ime s frontendom
+      fuel: car.fuel,               // uskladi ime s frontendom
       price: car.price,
       imagePath: car.imagePath,         // može biti string ili null
       images: car.imagePath ? [car.imagePath] : [],
@@ -180,6 +173,11 @@ async function createCar(req, res) {
         fuel,
         km: km ? Number(km) : null,
         imagePath,
+        inventory: {
+          create: {
+            quantity: initialQuantity || 0
+          }
+        }
       },
     });
 

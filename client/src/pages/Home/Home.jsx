@@ -60,7 +60,7 @@ const Home = () => {
       {/* Vehicle List */}
       <div id="vehicle-section" className="container mx-auto px-4 py-12">
         <h2 className="text-3xl font-bold mb-8 text-gray-800">Naša ponuda vozila</h2>
-        <VehicleList />
+        <VehicleList limit={6} />
         <div className="mt-10 text-center">
           <Link to="/vehicles" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300">
             Prikaži sva vozila <FaArrowRight className="ml-2 inline" />

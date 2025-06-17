@@ -37,47 +37,36 @@ async function getInventoryById(req, res) {
   }
 }
 
-async function createInventory(req, res) {
-  const { carId, partId, quantity } = req.body;
+async function getInventoryByPartId(req, res) {
+  const { id } = req.params;
   try {
-    const newInventory = await prisma.inventory.create({
-      data: {
-        carId,
-        partId,
-        quantity,
+    const item = await prisma.inventory.findFirst({
+      where: {
+        partId: BigInt(id)
       },
     });
-    res.status(201).json(newInventory);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
+    if (!item) return res.status(404).json({ message: 'Nema na skladištu' });
+    res.json(convertBigInts(item));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Greška kod dohvaćanja inventara.' });
   }
 }
 
 async function updateInventory(req, res) {
   const { id } = req.params;
-  const { carId, partId, quantity } = req.body;
+  const { quantity } = req.body;
+
+  if (typeof quantity !== 'number' || quantity < 0) {
+    return res.status(400).json({ message: 'Količina mora biti broj veći ili jednak 0' });
+  }
+
   try {
     const updatedInventory = await prisma.inventory.update({
-      where: { id: Number(id) },
-      data: {
-        carId,
-        partId,
-        quantity,
-      },
+      where: { id: BigInt(id) },
+      data: { quantity },
     });
-    res.json(updatedInventory);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Greška na serveru' });
-  }
-}
-
-async function deleteInventory(req, res) {
-  const { id } = req.params;
-  try {
-    await prisma.inventory.delete({ where: { id: Number(id) } });
-    res.json({ message: 'Inventar obrisan' });
+    res.json(convertBigInts(updatedInventory));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
@@ -87,7 +76,6 @@ async function deleteInventory(req, res) {
 module.exports = {
   getAllInventory,
   getInventoryById,
-  createInventory,
   updateInventory,
-  deleteInventory,
+  getInventoryByPartId,
 };
