@@ -8,7 +8,7 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#00C49F', '#FFBB28'
 
 const Analytics = () => {
   const [sales, setSales] = useState([]);
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState('mjesec');
   const [popularCars, setPopularCars] = useState([]);
   const [popularParts, setPopularParts] = useState([]);
   const [activeEmployees, setActiveEmployees] = useState([]);
@@ -16,32 +16,46 @@ const Analytics = () => {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    fetch(`/api/analytics/sales?period=${period}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setSales(data.sales || []));
+    const fetchData = async () => {
+      try {
+        const salesRes = await fetch(`/api/analytics/sales?period=${period}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const salesData = await salesRes.json();
+        console.log('Sales data received:', salesData);
+        setSales(salesData.sales || []);
 
-    fetch('/api/analytics/popular-cars', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setPopularCars(data || []));
+        const carsRes = await fetch('/api/analytics/popular-cars', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const carsData = await carsRes.json();
+        setPopularCars(carsData || []);
 
-    fetch('/api/analytics/popular-parts', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setPopularParts(data || []));
+        const partsRes = await fetch('/api/analytics/popular-parts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const partsData = await partsRes.json();
+        setPopularParts(partsData || []);
 
-    fetch('/api/analytics/active-employees', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setActiveEmployees(data || []));
-  }, [period]);
+        const employeesRes = await fetch('/api/analytics/active-employees', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const employeesData = await employeesRes.json();
+        setActiveEmployees(employeesData || []);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      }
+    };
 
-  const formatDate = (isoString) => new Date(isoString).toLocaleDateString();
+    fetchData();
+  }, [period, token]);
+
+  // Formatiraj datum - možeš promijeniti prema periodu, ovdje jednostavno lokalni datum
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="p-6 space-y-10">
@@ -56,20 +70,35 @@ const Analytics = () => {
             onChange={e => setPeriod(e.target.value)}
             className="border rounded px-2 py-1"
           >
-            <option value="day">Dnevno</option>
-            <option value="week">Tjedno</option>
-            <option value="month">Mjesečno</option>
-            <option value="year">Godišnje</option>
+            <option value="dan">Dnevno</option>
+            <option value="tjedan">Tjedno</option>
+            <option value="mjesec">Mjesečno</option>
+            <option value="godina">Godišnje</option>
           </select>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={sales.map(s => ({ date: formatDate(s.saleDate), total: s._sum.totalPrice }))}>
+          <LineChart data={sales}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis unit="€" />
-            <Tooltip />
+            <XAxis 
+              dataKey="date" 
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis 
+              unit="€"
+              tickFormatter={(value) => value.toFixed(2)}
+            />
+            <Tooltip 
+              formatter={(value) => [`${value.toFixed(2)} €`, 'Ukupno']}
+            />
             <Legend />
-            <Line type="monotone" dataKey="total" stroke="#8884d8" />
+            <Line
+              type="monotone" 
+              dataKey="total" 
+              stroke="#8884d8" 
+              name="Prodaja"
+            />
           </LineChart>
         </ResponsiveContainer>
       </section>
@@ -80,8 +109,8 @@ const Analytics = () => {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={popularCars.map(item => ({
-              name: `${item.car?.make} ${item.car?.model}`,
-              sales: item.salesCount
+              name: item.car ? `${item.car.make} ${item.car.model}` : 'Nepoznato vozilo',
+              sales: item.quantitySold || 0
             }))}
           >
             <CartesianGrid strokeDasharray="3 3" />
@@ -99,9 +128,9 @@ const Analytics = () => {
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
-              data={popularParts.map((item, index) => ({
-                name: item.part?.name,
-                value: item.salesCount
+              data={popularParts.map((item) => ({
+                name: item.part?.name || 'Nepoznati dio',
+                value: item.quantitySold || 0
               }))}
               dataKey="value"
               nameKey="name"
@@ -127,8 +156,8 @@ const Analytics = () => {
           <BarChart
             layout="vertical"
             data={activeEmployees.map(item => ({
-              name: `${item.employee?.firstName} ${item.employee?.lastName}`,
-              count: item.activityCount
+              name: item.employee ? `${item.employee.firstName} ${item.employee.lastName}` : 'Nepoznati zaposlenik',
+              count: item.activityCount || 0
             }))}
             margin={{ left: 80 }}
           >

@@ -1,29 +1,46 @@
 import { createContext, useContext, useState, useMemo, useEffect } from 'react';
 
+// Dohvati userId iz JWT tokena (pretpostavlja standardni payload)
+function getUserIdFromToken() {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const [, payloadBase64] = token.split('.');
+    const payload = JSON.parse(atob(payloadBase64));
+    return payload.userId || payload.id || null;
+  } catch {
+    return null;
+  }
+}
+
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  // Inicijalno učitavanje cartItems iz localStorage ili prazno ako nema
+  const userId = getUserIdFromToken();
+  const storageKey = `cartItems-${userId}`;
+
+  // Učitaj košaricu za korisnika
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const saved = localStorage.getItem('cartItems');
+      const saved = localStorage.getItem(storageKey);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Spremi cartItems u localStorage kad se promijene
+  // Spremi košaricu kad se promijeni
   useEffect(() => {
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
-  }, [cartItems]);
+    localStorage.setItem(storageKey, JSON.stringify(cartItems));
+  }, [cartItems, storageKey]);
 
   const addToCart = async (item) => {
-    const token = localStorage.getItem('token'); // dohvati token
+    const token = localStorage.getItem('token');
 
     const res = await fetch(`/api/inventory/part/${item.id}`, {
       headers: {
-        Authorization: `Bearer ${token}`, // pošalji token u headeru
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -67,21 +84,31 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // Pretpostavljamo da svaki item ima polje `price` u eurima i quantity
-  // Izračun ukupne cijene
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem(storageKey); // Očisti i iz localStorage
+  };
+
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cartItems]);
 
   const tax = useMemo(() => subtotal * 0.25, [subtotal]);
-
   const cartTotal = useMemo(() => subtotal + tax, [subtotal, tax]);
 
-  // Dodajemo i clearCart za brisanje košarice
-  const clearCart = () => setCartItems([]);
-
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, subtotal, tax, cartTotal, clearCart }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        subtotal,
+        tax,
+        cartTotal,
+        clearCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

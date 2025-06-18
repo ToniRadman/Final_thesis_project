@@ -62,6 +62,7 @@ const Cart = () => {
                   <div className="col-span-5 flex flex-col justify-center">
                     <h3 className="font-medium">{item.name}</h3>
                     {/* Dodatni podaci */}
+                    <p className="text-sm text-gray-500 mt-1">Serijski broj: {item.id}</p>
                     <p className="text-sm text-gray-500">Kategorija: {item.category}</p>
                     <p className="text-sm text-gray-500">Dobavljač: {item.supplier}</p>
                   </div>

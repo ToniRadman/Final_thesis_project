@@ -23,8 +23,10 @@ async function createBooking(req, res) {
       where: {
         customerId: userId,
         date: newBookingDate,
+        status: { not: 'CANCELLED' }, // ✅ dozvoli ako je otkazana
       },
     });
+
     if (existingUserBooking) {
       return res.status(400).json({
         message: 'Već imate rezervaciju u to vrijeme.',
@@ -35,6 +37,7 @@ async function createBooking(req, res) {
       where: {
         carId: Number(carId),
         date: newBookingDate,
+        status: { not: 'CANCELLED' }, // ✅ dozvoli ako je otkazana
       },
     });
 
@@ -54,9 +57,9 @@ async function createBooking(req, res) {
       },
     });
 
-    res.status(201).json(convertBigInts({ 
-      message: 'Rezervacija uspješno kreirana', 
-      booking 
+    res.status(201).json(convertBigInts({
+      message: 'Rezervacija uspješno kreirana',
+      booking
     }));
 
   } catch (error) {

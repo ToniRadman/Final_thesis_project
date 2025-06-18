@@ -15,6 +15,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser?.id;
+      if (userId) {
+        localStorage.removeItem(`cartItems-${userId}`);
+      }
+    }
+
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);

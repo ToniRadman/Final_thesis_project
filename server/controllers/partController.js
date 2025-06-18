@@ -14,6 +14,7 @@ function serializePart(part) {
 const getAllParts = async (req, res) => {
   try {
     const {
+      id,
       name,
       category,
       supplierId,
@@ -25,6 +26,26 @@ const getAllParts = async (req, res) => {
     } = req.query;
 
     const filters = {};
+
+    if (id && /^\d+$/.test(id)) {
+      const part = await prisma.part.findUnique({
+        where: {
+          id: parseInt(id, 10),
+        },
+        include: {
+          supplier: true,
+        },
+      });
+
+      if (!part) {
+        return res.status(404).json({ data: [], total: 0 });
+      }
+
+      return res.json(convertBigInts({
+        data: [serializePart(part)],
+        total: 1,
+      }));
+    }
 
     if (name) {
       filters.name = {

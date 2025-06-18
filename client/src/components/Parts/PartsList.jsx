@@ -119,6 +119,8 @@ const PartList = ({ filters = {}, limit }) => {
                 </span>
               </div>
 
+              <p className="text-sm text-gray-500 mt-1">Serijski broj: {part.id}</p>
+
               {/* Ikonice za edit i delete u novom retku sa margin-top */}
               <div className="flex space-x-3 mb-3">
                 {canEdit && (<button

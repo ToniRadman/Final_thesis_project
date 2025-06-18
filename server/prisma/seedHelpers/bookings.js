@@ -12,6 +12,11 @@ module.exports = async function seedBookings(prisma) {
     return;
   }
 
+  if (cars.length < 4 || customers.length < 5 || staffMembers.length < 5) {
+    console.warn('⚠️ Not enough data to create all sample bookings.');
+    return;
+  }
+
   const bookings = [
     {
       customerId: customers[0].id,

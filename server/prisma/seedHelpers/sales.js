@@ -22,7 +22,7 @@ module.exports = async function seedSales(prisma) {
 
   const paymentMethods = ['CARD', 'CASH'];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     const customer = customers[i % customers.length];
     const inventoryItem = inventories[i % inventories.length];
 
@@ -47,7 +47,8 @@ module.exports = async function seedSales(prisma) {
         userId: customer.id,
         paymentMethod: paymentMethods[i % paymentMethods.length],
         total,
-        createdAt: new Date(2024, i, 10 + i),
+        // createdAt: new Date(2024, i, 10 + i),
+        createdAt: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1),
         customerFirstName: customer.firstName,
         customerLastName: customer.lastName,
         customerEmail: customer.email,

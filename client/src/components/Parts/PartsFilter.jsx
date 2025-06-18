@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import InputNumber from "../Inputs/InputNumber";
 
 const PartFilter = ({ onFilter }) => {
   const [filters, setFilters] = useState({
+    id: '',
     name: '',
     category: '',
     supplierId: '',
@@ -69,6 +71,7 @@ const PartFilter = ({ onFilter }) => {
 
   const handleReset = () => {
     const resetFilters = {
+      id: '',
       name: '',
       category: '',
       supplierId: '',
@@ -110,6 +113,15 @@ const PartFilter = ({ onFilter }) => {
             className="w-full p-3 border rounded"
           />
         </div>
+
+        {/* Serijski broj */}
+        <InputNumber
+          name="id"
+          label="Serijski broj (ID)"
+          value={filters.id}
+          onChange={(val) => setFilters((prev) => ({ ...prev, id: val }))}
+          placeholder="ID"
+        />
 
         {/* Kategorija */}
         <div>

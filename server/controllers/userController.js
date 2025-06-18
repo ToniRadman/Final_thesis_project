@@ -70,7 +70,7 @@ async function updateUser(req, res) {
       select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true },
     });
 
-    res.json(updatedUser);
+    res.json(convertBigInts(updatedUser));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Greška na serveru' });
@@ -95,7 +95,7 @@ async function updateOwnProfile(req, res) {
       },
     });
 
-    res.json(updatedUser);
+    res.json(convertBigInts(updatedUser));
   } catch (error) {
     console.error('Greška pri ažuriranju profila:', error);
     res.status(500).json({ message: 'Greška na serveru' });
